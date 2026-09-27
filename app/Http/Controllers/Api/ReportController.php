@@ -36,9 +36,24 @@ class ReportController extends Controller
                ], 400); 
             } 
 
-        //hitung total transaksi hari ini
-        $total_deposit = Transaction::whereDate('transaction_date', $today)->where('transaction_type', 'Setoran')->sum('amount');
-        $total_withdrawal = Transaction::whereDate('transaction_date', $today)->where('transaction_type', 'Penarikan')->sum('amount');
+        //hitung total transaksi hari ini khusus teller ini
+        $total_deposit = Transaction::whereDate('transaction_date', $today)
+                            ->where('user_id', $request->user()->id)
+                            ->where('transaction_type', 'Setoran')
+                            ->sum('amount');
+                            
+        $total_withdrawal = Transaction::whereDate('transaction_date', $today)
+                            ->where('user_id', $request->user()->id)
+                            ->where('transaction_type', 'Penarikan')
+                            ->sum('amount');
+
+        //cegah submit jika tidak ada transaksi
+        if ($total_deposit == 0 && $total_withdrawal == 0) {
+            return response()->json([
+                'success'  => false,
+                'message'  => 'Tidak ada transaksi hari ini. Laporan tidak perlu disubmit.'
+            ], 400);
+        }
 
         //Simpan ke database dengan status pending
         $report = DailyReport::create([

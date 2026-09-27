@@ -41,19 +41,24 @@ class TellerController extends Controller
     {
         $today = date('Y-m-d');
         
-        $total_deposit = \App\Models\Transaction::where('user_id', auth()->id())
-                        ->whereDate('transaction_date', $today)
-                        ->where('transaction_type', 'Setoran')
-                        ->sum('amount');
-                        
-        $total_withdrawal = \App\Models\Transaction::where('user_id', auth()->id())
-                        ->whereDate('transaction_date', $today)
-                        ->where('transaction_type', 'Penarikan')
-                        ->sum('amount');
-
         $report_today = \App\Models\DailyReport::where('teller_id', auth()->id())
                         ->whereDate('report_date', $today)
                         ->first();
+
+        if ($report_today) {
+            $total_deposit = $report_today->total_deposit;
+            $total_withdrawal = $report_today->total_withdrawal;
+        } else {
+            $total_deposit = \App\Models\Transaction::where('user_id', auth()->id())
+                            ->whereDate('transaction_date', $today)
+                            ->where('transaction_type', 'Setoran')
+                            ->sum('amount');
+                            
+            $total_withdrawal = \App\Models\Transaction::where('user_id', auth()->id())
+                            ->whereDate('transaction_date', $today)
+                            ->where('transaction_type', 'Penarikan')
+                            ->sum('amount');
+        }
 
         $reports = \App\Models\DailyReport::where('teller_id', auth()->id())
                         ->whereDate('report_date', '<', $today)
@@ -89,5 +94,17 @@ class TellerController extends Controller
             return redirect()->back()->with('error', $data->message);
         }
         return redirect()->back()->with('success', 'Laporan hari ini berhasil dikirim ke Supervisor.');
+    }
+
+    public function cetakStruk($id)
+    {
+        $transaction = \App\Models\Transaction::with(['customer', 'user'])->findOrFail($id);
+        
+        // Pastikan hanya bisa mencetak transaksi miliknya sendiri
+        if ($transaction->user_id !== auth()->id()) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        return view('teller.cetak_struk', compact('transaction'));
     }
 }

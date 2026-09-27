@@ -21,7 +21,7 @@ Route::get('/', function () {
     return match(auth()->user()->role) {
         'Teller'        => redirect('/teller/transaksi'),
         'Supervisor'    => redirect('/supervisor/dashboard'),
-        'Administrator' => redirect('/admin/nasabah'),
+        'Administrator' => redirect('/admin/dashboard'),
     };
 })->name('home');
 
@@ -30,6 +30,7 @@ Route::middleware(['auth', 'role:Teller'])->prefix('teller')->group(function () 
     Route::get('/transaksi', [TellerController::class, 'transaksi'])->name('teller.transaksi');
     Route::post('/deposit', [TellerController::class, 'deposit'])->name('teller.deposit');
     Route::post('/withdraw', [TellerController::class, 'withdraw'])->name('teller.withdraw');
+    Route::get('/transaksi/{id}/cetak', [TellerController::class, 'cetakStruk'])->name('teller.cetak');
     Route::get('/riwayat', [TellerController::class, 'riwayat'])->name('teller.riwayat');
     Route::get('/laporan', [TellerController::class, 'laporan'])->name('teller.laporan');
     Route::post('/laporan/submit', [TellerController::class, 'submitLaporan'])->name('teller.laporan.submit');
@@ -46,6 +47,7 @@ Route::middleware(['auth', 'role:Supervisor'])->prefix('supervisor')->group(func
 
 // === ADMINISTRATOR ===
 Route::middleware(['auth', 'role:Administrator'])->prefix('admin')->group(function () {
+    Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('admin.dashboard');
     Route::get('/nasabah', [AdminController::class, 'nasabah'])->name('admin.nasabah');
     Route::get('/nasabah/tambah', [AdminController::class, 'tambahNasabah'])->name('admin.nasabah.tambah');
     Route::post('/nasabah', [AdminController::class, 'simpanNasabah'])->name('admin.nasabah.simpan');
@@ -59,4 +61,5 @@ Route::middleware(['auth', 'role:Administrator'])->prefix('admin')->group(functi
     Route::put('/petugas/{id}', [AdminController::class, 'updatePetugas'])->name('admin.petugas.update');
     Route::delete('/petugas/{id}', [AdminController::class, 'hapusPetugas'])->name('admin.petugas.hapus');
     Route::get('/audit', [AdminController::class, 'audit'])->name('admin.audit');
+    Route::get('/pengaturan', [AdminController::class, 'pengaturan'])->name('admin.pengaturan');
 });

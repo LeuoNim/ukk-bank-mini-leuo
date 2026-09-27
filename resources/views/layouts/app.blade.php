@@ -24,9 +24,11 @@
                 <a href="{{ route('supervisor.approval') }}" class="block px-4 py-2 rounded {{ request()->routeIs('supervisor.approval') ? 'bg-amber-500 text-gray-900 font-bold' : 'hover:bg-gray-700' }}">Persetujuan Laporan</a>
                 <a href="{{ route('supervisor.audit') }}" class="block px-4 py-2 rounded {{ request()->routeIs('supervisor.audit') ? 'bg-amber-500 text-gray-900 font-bold' : 'hover:bg-gray-700' }}">Log Audit</a>
             @elseif(auth()->user()->role === 'Administrator')
+                <a href="{{ route('admin.dashboard', [], false) ?? '#' }}" class="block px-4 py-2 rounded {{ request()->routeIs('admin.dashboard') ? 'bg-amber-500 text-gray-900 font-bold' : 'hover:bg-gray-700' }}">Dashboard</a>
                 <a href="{{ route('admin.nasabah') }}" class="block px-4 py-2 rounded {{ request()->routeIs('admin.nasabah') ? 'bg-amber-500 text-gray-900 font-bold' : 'hover:bg-gray-700' }}">Kelola Nasabah</a>
                 <a href="{{ route('admin.petugas') }}" class="block px-4 py-2 rounded {{ request()->routeIs('admin.petugas') ? 'bg-amber-500 text-gray-900 font-bold' : 'hover:bg-gray-700' }}">Kelola Petugas</a>
                 <a href="{{ route('admin.audit') }}" class="block px-4 py-2 rounded {{ request()->routeIs('admin.audit') ? 'bg-amber-500 text-gray-900 font-bold' : 'hover:bg-gray-700' }}">Log Audit</a>
+                <a href="{{ route('admin.pengaturan') }}" class="block px-4 py-2 rounded {{ request()->routeIs('admin.pengaturan') ? 'bg-amber-500 text-gray-900 font-bold' : 'hover:bg-gray-700' }}">Pengaturan</a>
             @endif
         </nav>
         <div class="p-4 border-t border-gray-700">

@@ -41,12 +41,20 @@ class TransactionController extends Controller
         ], 200);
     }
 
+    private function generateTransactionCode($type)
+    {
+        $prefix = $type === 'Setoran' ? 'DEP' : 'WDR';
+        $date = now()->format('Ymd');
+        $count = Transaction::whereDate('transaction_date', now()->format('Y-m-d'))->count() + 1;
+        return sprintf('%s-%s-%04d', $prefix, $date, $count);
+    }
+
     public function deposit(Request $request)
     {
         //1. Validasi input dari petugas
         $request->validate([
             'customer_id' => 'required|exists:customers,id',
-            'amount'      => 'required|numeric|min:1',
+            'amount'      => 'required|numeric|min:1000|multiple_of:1000',
             'description' => 'nullable|string'
         ]);
 
@@ -56,7 +64,7 @@ class TransactionController extends Controller
         try {
             //2. Cetak riwayat transaksi utama
             $transaction = Transaction::create([
-                'transaction_code' => 'DEP-' . time(),
+                'transaction_code' => $this->generateTransactionCode('Setoran'),
                 'customer_id'      => $request->customer_id,
                 'user_id'          => $request->user()->id,
                 'transaction_date' => now(),
@@ -111,7 +119,7 @@ class TransactionController extends Controller
         //1. validasi input
         $request->validate([
             'customer_id'  => 'required|exists:customers,id',
-            'amount'       => 'required|numeric|min:1',
+            'amount'       => 'required|numeric|min:1000|multiple_of:1000',
             'pin'          => 'required|numeric|digits_between:4,6',
             'description'  => 'nullable|string'
         ]);
@@ -141,7 +149,7 @@ class TransactionController extends Controller
         try {
             //4. Catat riwayat transaksi penarikan
             $transaction = Transaction::create([
-                'transaction_code'  => 'WDR-' . time(),
+                'transaction_code'  => $this->generateTransactionCode('Penarikan'),
                 'customer_id'       => $request->customer_id,
                 'user_id'           => $request->user()->id,
                 'transaction_date'  => now(),

@@ -29,6 +29,7 @@
                 <th class="py-3 px-4 border-b">Nasabah</th>
                 <th class="py-3 px-4 border-b">Jenis</th>
                 <th class="py-3 px-4 border-b">Nominal</th>
+                <th class="py-3 px-4 border-b">Aksi</th>
             </tr>
         </thead>
         <tbody>
@@ -45,10 +46,15 @@
                     @endif
                 </td>
                 <td class="py-3 px-4 font-bold">Rp {{ number_format($trx->amount, 0, ',', '.') }}</td>
+                <td class="py-3 px-4">
+                    <a href="{{ route('teller.cetak', $trx->id) }}" target="_blank" class="text-amber-600 hover:text-amber-800 font-bold text-sm bg-amber-50 px-3 py-1 rounded border border-amber-200">
+                        Cetak Struk
+                    </a>
+                </td>
             </tr>
             @empty
             <tr>
-                <td colspan="5" class="py-8 text-center text-gray-500">Belum ada transaksi</td>
+                <td colspan="6" class="py-8 text-center text-gray-500">Belum ada transaksi</td>
             </tr>
             @endforelse
         </tbody>
