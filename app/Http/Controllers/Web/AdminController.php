@@ -91,6 +91,12 @@ class AdminController extends Controller
         return redirect()->route('admin.nasabah')->with('success', 'Nasabah berhasil dihapus.');
     }
 
+    public function cetakQrNasabah($id)
+    {
+        $customer = \App\Models\Customer::findOrFail($id);
+        return view('admin.cetak_qr', compact('customer'));
+    }
+
     public function petugas()
     {
         $users = \App\Models\User::orderBy('role')->orderBy('staff_name')->get();
@@ -107,7 +113,6 @@ class AdminController extends Controller
         $request->validate([
             'username' => 'required|unique:users',
             'staff_name' => 'required|string',
-            'email' => 'required|email|unique:users',
             'role' => 'required|in:Administrator,Supervisor,Teller',
             'password' => 'required|min:6',
         ]);
@@ -115,7 +120,6 @@ class AdminController extends Controller
         \App\Models\User::create([
             'username' => $request->username,
             'staff_name' => $request->staff_name,
-            'email' => $request->email,
             'role' => $request->role,
             'password' => bcrypt($request->password)
         ]);
@@ -136,7 +140,6 @@ class AdminController extends Controller
         $request->validate([
             'username' => 'required|unique:users,username,'.$id,
             'staff_name' => 'required|string',
-            'email' => 'required|email|unique:users,email,'.$id,
             'role' => 'required|in:Administrator,Supervisor,Teller',
             'password' => 'nullable|min:6',
         ]);
@@ -144,7 +147,6 @@ class AdminController extends Controller
         $user->update([
             'username' => $request->username,
             'staff_name' => $request->staff_name,
-            'email' => $request->email,
             'role' => $request->role,
         ]);
 

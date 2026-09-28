@@ -54,6 +54,7 @@ Route::middleware(['auth', 'role:Administrator'])->prefix('admin')->group(functi
     Route::get('/nasabah/{id}/edit', [AdminController::class, 'editNasabah'])->name('admin.nasabah.edit');
     Route::put('/nasabah/{id}', [AdminController::class, 'updateNasabah'])->name('admin.nasabah.update');
     Route::delete('/nasabah/{id}', [AdminController::class, 'hapusNasabah'])->name('admin.nasabah.hapus');
+    Route::get('/nasabah/{id}/qr', [AdminController::class, 'cetakQrNasabah'])->name('admin.nasabah.qr');
     Route::get('/petugas', [AdminController::class, 'petugas'])->name('admin.petugas');
     Route::get('/petugas/tambah', [AdminController::class, 'tambahPetugas'])->name('admin.petugas.tambah');
     Route::post('/petugas', [AdminController::class, 'simpanPetugas'])->name('admin.petugas.simpan');

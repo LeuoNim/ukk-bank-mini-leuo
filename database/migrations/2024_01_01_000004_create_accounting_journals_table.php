@@ -13,10 +13,10 @@ return new class extends Migration
     {
         Schema::create('accounting_journals', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('transaction_id')->constrained('transactions')->onDelete('cascade');
+            $table->foreignId('transaction_id')->constrained('transactions')->onDelete('restrict');
             $table->string('account_code'); // 111 = Kas, 211 = Tabungan
             $table->string('position'); // Debet / Kredit
-            $table->decimal('amount', 15, 2);
+            $table->bigInteger('amount');
             $table->timestamps();
         });
     }

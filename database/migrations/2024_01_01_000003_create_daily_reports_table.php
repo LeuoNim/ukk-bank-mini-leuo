@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('daily_reports', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('teller_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('teller_id')->constrained('users')->onDelete('restrict');
             $table->foreignId('supervisor_id')->nullable()->constrained('users')->onDelete('set null');
             $table->date('report_date');
-            $table->decimal('total_deposit', 15, 2)->default(0);
-            $table->decimal('total_withdrawal', 15, 2)->default(0);
+            $table->bigInteger('total_deposit')->default(0);
+            $table->bigInteger('total_withdrawal')->default(0);
             $table->string('approval_status')->default('Pending'); // Pending / Approved
             $table->timestamps();
         });

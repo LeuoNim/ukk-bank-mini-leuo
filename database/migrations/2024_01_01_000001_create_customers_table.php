@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('student_id')->unique(); // NIS siswa
             $table->string('student_name');
             $table->string('class'); // kelas: XII AKL 1, dll
-            $table->decimal('balance', 15, 2)->default(0); // saldo
+            $table->bigInteger('balance')->default(0); // saldo
             $table->string('pin');
             $table->string('status')->default('Aktif'); // Aktif / NonAktif
             $table->timestamps();

@@ -66,24 +66,52 @@ class TellerController extends Controller
                         ->take(10)
                         ->get();
 
-        return view('teller.laporan', compact('total_deposit', 'total_withdrawal', 'report_today', 'reports'));
+        // Saldo Awal (sebelum hari ini)
+        // Hitung total debet kas - total kredit kas sebelum hari ini
+        $debet_sebelumnya = \App\Models\Accounting_Journal::where('account_code', '111')
+                            ->where('position', 'Debet')
+                            ->whereHas('transaction', function($q) use ($today) {
+                                $q->whereDate('transaction_date', '<', $today);
+                            })->sum('amount');
+                            
+        $kredit_sebelumnya = \App\Models\Accounting_Journal::where('account_code', '111')
+                            ->where('position', 'Kredit')
+                            ->whereHas('transaction', function($q) use ($today) {
+                                $q->whereDate('transaction_date', '<', $today);
+                            })->sum('amount');
+                            
+        $initial_balance = $debet_sebelumnya - $kredit_sebelumnya;
+        $final_balance = $initial_balance + $total_deposit - $total_withdrawal;
+
+        return view('teller.laporan', compact('total_deposit', 'total_withdrawal', 'report_today', 'reports', 'initial_balance', 'final_balance'));
     }
 
     public function deposit(Request $request)
     {
-        // Panggil logika dari TransactionController API atau implementasi ulang
-        app(\App\Http\Controllers\Api\TransactionController::class)->deposit($request);
-        return redirect()->back()->with('success', 'Setoran tunai berhasil diproses.');
+        try {
+            app(\App\Http\Controllers\Api\TransactionController::class)->deposit($request);
+            return redirect()->back()->with('success', 'Setoran tunai berhasil diproses.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
+        }
     }
 
     public function withdraw(Request $request)
     {
-        $response = app(\App\Http\Controllers\Api\TransactionController::class)->withdraw($request);
-        $data = json_decode($response->getContent());
-        if (!$data->success) {
-            return redirect()->back()->with('error', $data->message);
+        try {
+            $response = app(\App\Http\Controllers\Api\TransactionController::class)->withdraw($request);
+            $data = json_decode($response->getContent());
+            if (!$data->success) {
+                return redirect()->back()->with('error', $data->message);
+            }
+            return redirect()->back()->with('success', 'Penarikan tunai berhasil diproses.');
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return redirect()->back()->withErrors($e->errors())->withInput();
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', $e->getMessage());
         }
-        return redirect()->back()->with('success', 'Penarikan tunai berhasil diproses.');
     }
 
     public function submitLaporan(Request $request)

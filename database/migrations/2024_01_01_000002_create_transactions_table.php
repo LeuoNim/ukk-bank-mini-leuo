@@ -14,14 +14,17 @@ return new class extends Migration
         Schema::create('transactions', function (Blueprint $table) {
             $table->id();
             $table->string('transaction_code')->unique(); // DEP-xxx, WDR-xxx
-            $table->foreignId('customer_id')->constrained('customers')->onDelete('cascade');
-            $table->foreignId('user_id')->constrained('users')->onDelete('cascade'); // teller yang memproses
+            $table->foreignId('customer_id')->constrained('customers')->onDelete('restrict');
+            $table->foreignId('user_id')->constrained('users')->onDelete('restrict'); // teller yang memproses
             $table->dateTime('transaction_date');
             $table->string('transaction_type'); // Setoran / Penarikan
-            $table->decimal('amount', 15, 2);
+            $table->bigInteger('amount');
             $table->string('description')->nullable();
             $table->timestamps();
         });
+
+        // Menambahkan CHECK CONSTRAINT untuk memastikan nominal transaksi tidak minus / 0
+        \Illuminate\Support\Facades\DB::statement('ALTER TABLE transactions ADD CONSTRAINT chk_amount_gt_zero CHECK (amount > 0)');
     }
 
     /**

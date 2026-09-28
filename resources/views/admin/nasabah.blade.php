@@ -41,6 +41,7 @@
                     <td class="p-3 text-gray-600">{{ $c->class }}</td>
                     <td class="p-3 font-bold text-gray-900">Rp {{ number_format($c->balance, 0, ',', '.') }}</td>
                     <td class="p-3">
+                        <a href="{{ route('admin.nasabah.qr', $c->id) }}" class="text-blue-600 hover:text-blue-800 text-sm font-bold mr-2" target="_blank">QR</a>
                         <a href="{{ route('admin.nasabah.edit', $c->id) }}" class="text-amber-600 hover:text-amber-800 text-sm font-bold mr-2">Edit</a>
                         <form action="{{ route('admin.nasabah.hapus', $c->id) }}" method="POST" class="inline">
                             @csrf

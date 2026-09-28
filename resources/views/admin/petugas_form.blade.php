@@ -39,11 +39,7 @@
                 class="w-full px-4 py-2 border rounded focus:outline-none focus:border-amber-500">
         </div>
 
-        <div class="mb-4">
-            <label class="block text-gray-700 font-bold mb-2">Email</label>
-            <input type="email" name="email" value="{{ old('email', $user->email ?? '') }}" required
-                class="w-full px-4 py-2 border rounded focus:outline-none focus:border-amber-500">
-        </div>
+        <!-- Field Email telah dihapus sesuai ketentuan UKK -->
 
         <div class="mb-4">
             <label class="block text-gray-700 font-bold mb-2">Role Akses</label>

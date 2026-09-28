@@ -32,7 +32,7 @@
         <a href="{{ route('supervisor.approval') }}" class="bg-amber-500 hover:bg-amber-600 text-white px-4 py-2 rounded font-bold transition-colors">
             Cek Laporan Teller
         </a>
-        <a href="#" class="bg-gray-900 hover:bg-black text-white px-4 py-2 rounded font-bold transition-colors">
+        <a href="{{ route('supervisor.audit') }}" class="bg-gray-900 hover:bg-black text-white px-4 py-2 rounded font-bold transition-colors">
             Lihat Log Audit Jurnal
         </a>
     </div>
