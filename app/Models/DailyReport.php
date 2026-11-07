@@ -14,16 +14,17 @@ class DailyReport extends Model
         'report_date',
         'total_deposit',
         'total_withdrawal',
-        'approval_status'
+        'approval_status',
+        'notes',
     ];
 
-    //relasi ke teller pembuat laporan
+    // relasi ke teller pembuat laporan
     public function teller()
     {
         return $this->belongsTo(User::class, 'teller_id');
     }
 
-    //relasi ke supervisor yang menyetujui
+    // relasi ke supervisor yang menyetujui
     public function supervisor()
     {
         return $this->belongsTo(User::class, 'supervisor_id');

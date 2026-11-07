@@ -29,6 +29,14 @@ class AuthController extends Controller
             ], 401);
         }
 
+        // Pastikan status akun petugas aktif
+        if (isset($user->status) && $user->status !== 'Aktif') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Akun petugas tidak aktif atau telah dinonaktifkan.',
+            ], 403);
+        }
+
         // 4. Membuat token sanctum/session guard jika sukses
         $token = $user->createToken('BankMiniToken')->plainTextToken;
 

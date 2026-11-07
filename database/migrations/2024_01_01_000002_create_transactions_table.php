@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -24,7 +25,7 @@ return new class extends Migration
         });
 
         // Menambahkan CHECK CONSTRAINT untuk memastikan nominal transaksi tidak minus / 0
-        \Illuminate\Support\Facades\DB::statement('ALTER TABLE transactions ADD CONSTRAINT chk_amount_gt_zero CHECK (amount > 0)');
+        DB::statement('ALTER TABLE transactions ADD CONSTRAINT chk_amount_gt_zero CHECK (amount > 0)');
     }
 
     /**

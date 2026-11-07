@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\Customer;
 use App\Models\User;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -16,21 +17,21 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // 1. Buat Akun Petugas
-        \App\Models\User::create([
+        User::create([
             'username' => 'admin',
             'staff_name' => 'Administrator Utama',
             'password' => bcrypt('password'),
             'role' => 'Administrator',
         ]);
 
-        \App\Models\User::create([
+        User::create([
             'username' => 'supervisor',
             'staff_name' => 'Supervisor Bank',
             'password' => bcrypt('password'),
             'role' => 'Supervisor',
         ]);
 
-        $teller = \App\Models\User::create([
+        $teller = User::create([
             'username' => 'teller',
             'staff_name' => 'Teller Satu',
             'password' => bcrypt('password'),
@@ -38,7 +39,7 @@ class DatabaseSeeder extends Seeder
         ]);
 
         // 2. Buat Akun Nasabah Contoh
-        \App\Models\Customer::create([
+        Customer::create([
             'account_number' => 'AK-0001',
             'student_id' => '2024001',
             'student_name' => 'Ahmad Ramadhan',
@@ -48,7 +49,7 @@ class DatabaseSeeder extends Seeder
             'status' => 'Aktif',
         ]);
 
-        \App\Models\Customer::create([
+        Customer::create([
             'account_number' => 'RPL-0001',
             'student_id' => '2024002',
             'student_name' => 'Siti Nurbaya',

@@ -13,10 +13,10 @@ class Accounting_Journal extends Model
         'transaction_id',
         'account_code',
         'position',
-        'amount'
+        'amount',
     ];
 
-    //relasi ke transaksi
+    // relasi ke transaksi
     public function transaction()
     {
         return $this->belongsTo(Transaction::class, 'transaction_id');

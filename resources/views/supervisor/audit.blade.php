@@ -6,6 +6,29 @@
     <p class="text-gray-600">Catatan jurnal akuntansi seluruh transaksi bank mini</p>
 </div>
 
+<!-- Filter -->
+<div class="bg-white p-6 border rounded-lg shadow-sm mb-6">
+    <form action="{{ route('supervisor.audit') }}" method="GET" class="flex flex-wrap gap-4 items-end">
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">Tanggal</label>
+            <input type="date" name="date" value="{{ request('date') }}" class="px-4 py-2 border rounded focus:outline-none focus:border-amber-500">
+        </div>
+        <div>
+            <label class="block text-sm font-bold text-gray-700 mb-2">Teller</label>
+            <select name="teller_id" class="px-4 py-2 border rounded focus:outline-none focus:border-amber-500">
+                <option value="">Semua Teller</option>
+                @foreach($tellers as $t)
+                    <option value="{{ $t->id }}" {{ request('teller_id') == $t->id ? 'selected' : '' }}>{{ $t->staff_name }}</option>
+                @endforeach
+            </select>
+        </div>
+        <div>
+            <button type="submit" class="bg-gray-900 text-white px-4 py-2 rounded hover:bg-gray-700 font-bold">Filter</button>
+            <a href="{{ route('supervisor.audit') }}" class="ml-2 text-gray-600 hover:text-gray-900 text-sm">Reset</a>
+        </div>
+    </form>
+</div>
+
 <!-- Ringkasan Keseimbangan Jurnal -->
 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
     <div class="bg-white p-6 border rounded-lg shadow-sm border-l-4 {{ $total_debet === $total_kredit ? 'border-l-green-500' : 'border-l-red-500' }}">
@@ -38,6 +61,7 @@
                     <th class="p-3 font-semibold text-gray-700">No. Transaksi</th>
                     <th class="p-3 font-semibold text-gray-700">Waktu</th>
                     <th class="p-3 font-semibold text-gray-700">Kode Akun</th>
+                    <th class="p-3 font-semibold text-gray-700">Teller</th>
                     <th class="p-3 font-semibold text-gray-700">Nasabah</th>
                     <th class="p-3 font-semibold text-gray-700 text-right">Debet</th>
                     <th class="p-3 font-semibold text-gray-700 text-right">Kredit</th>
@@ -54,6 +78,7 @@
                             {{ $j->account_code == '111' ? 'Kas Bank' : 'Titipan Nasabah' }}
                         </span>
                     </td>
+                    <td class="p-3 text-sm text-gray-900">{{ $j->transaction->user->staff_name ?? '-' }}</td>
                     <td class="p-3 text-sm text-gray-900">{{ $j->transaction->customer->student_name ?? '-' }}</td>
                     <td class="p-3 text-right font-medium text-gray-900">
                         {{ $j->position === 'Debet' ? 'Rp '.number_format($j->amount, 0, ',', '.') : '-' }}

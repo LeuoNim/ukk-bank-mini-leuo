@@ -7,8 +7,30 @@
     </div>
 
     @if(session('success'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4">
-            {{ session('success') }}
+        <div
+            class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 flex flex-wrap justify-between items-center gap-2">
+            <span class="font-medium">{{ session('success') }}</span>
+            @if(session('last_transaction_id'))
+                <a href="{{ route('teller.cetak', session('last_transaction_id')) }}" target="_blank"
+                    class="inline-flex items-center gap-1.5 bg-green-700 hover:bg-green-800 text-white text-xs font-bold py-1.5 px-3 rounded shadow transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
+                    Cetak Struk Transaksi
+                </a>
+            @endif
+        </div>
+    @endif
+
+    @if(session('pending_info'))
+        <div
+            class="bg-blue-50 border border-blue-300 text-blue-800 px-4 py-3 rounded relative mb-4 flex justify-between items-center">
+            <span>{{ session('pending_info') }}</span>
+            <a href="{{ route('teller.transaksi') }}"
+                class="text-xs bg-blue-600 hover:bg-blue-700 text-white font-semibold py-1 px-3 rounded">
+                Periksa Status
+            </a>
         </div>
     @endif
 
@@ -31,119 +53,218 @@
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
         <!-- Kolom Kiri: Cari Nasabah -->
-        <div class="bg-white border border-gray-200 shadow-sm rounded-lg p-6">
-            <h2 class="text-lg font-bold border-b pb-2 mb-4">Pencarian Nasabah</h2>
-
-            <form action="{{ route('teller.transaksi') }}" method="GET" class="mb-6 flex gap-2">
-                <input type="text" name="search" id="searchInput" placeholder="Ketik NIS atau Nomor Rekening..."
-                    value="{{ request('search') }}"
-                    class="flex-1 px-4 py-2 border rounded focus:outline-none focus:border-amber-500" required>
-                <button type="submit" class="bg-gray-900 text-white px-4 py-2 rounded hover:bg-gray-700">Cari</button>
-                <button type="button" id="scanQrBtn"
-                    class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 flex items-center justify-center"
-                    title="Scan QR Code">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-                        <path
-                            d="M0 .5A.5.5 0 0 1 .5 0h3a.5.5 0 0 1 0 1H1v2.5a.5.5 0 0 1-1 0v-3Zm12 0a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0V1h-2.5a.5.5 0 0 1-.5-.5ZM.5 12a.5.5 0 0 1 .5.5V15h2.5a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5v-3a.5.5 0 0 1 .5-.5Zm15 0a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1 0-1H15v-2.5a.5.5 0 0 1 .5-.5ZM4 4h1v1H4V4Z" />
-                        <path d="M7 2H2v5h5V2ZM3 3h3v3H3V3Zm2 8H4v1h1v-1Z" />
-                        <path d="M7 9H2v5h5V9Zm-4 1h3v3H3v-3Zm8-6h1v1h-1V4Z" />
-                        <path
-                            d="M9 2h5v5H9V2Zm1 1v3h3V3h-3ZM8 8v2h1v1H8v1h2v-2h1v2h1v-1h2v-1h-3V8H8Zm2 2H9V9h1v1Zm4 2h-1v1h-2v1h3v-2Zm-4 2v-1H8v1z" />
-                        <path d="M12 9h2V8h-2v1Z" />
-                    </svg>
-                </button>
-            </form>
-
-            <!-- Container Scanner QR -->
-            <div id="reader-container" class="hidden mb-6 border rounded overflow-hidden">
-                <div class="bg-gray-800 text-white p-2 text-sm flex justify-between items-center">
-                    <span>Arahkan QR Code ke Kamera</span>
-                    <button type="button" id="closeScannerBtn" class="text-red-400 hover:text-red-300 font-bold">X
-                        Tutup</button>
-                </div>
-                <div id="reader" width="100%"></div>
+        <div class="bg-white border border-gray-200 shadow-sm rounded-xl p-6 lg:p-7">
+            <div class="flex justify-between items-center border-b pb-3 mb-5">
+                <h2 class="text-lg font-bold text-gray-800">Data Nasabah</h2>
+                @if(!empty($isLocked) && isset($customer))
+                    <span
+                        class="inline-flex items-center text-xs font-semibold px-3 py-1 rounded-full bg-slate-100 text-slate-700 border border-slate-200">
+                        Sesi Terkunci
+                    </span>
+                @endif
             </div>
 
+            @if(!empty($isLocked) && isset($customer))
+                <!-- Banner Terkunci & Tombol Ganti Nasabah -->
+                <div class="bg-slate-50 border border-slate-200 p-4 rounded-lg mb-6 flex flex-wrap justify-between items-center gap-3">
+                    <div>
+                        <p class="text-xs font-bold text-slate-800 uppercase tracking-wide">Nasabah Terpilih</p>
+                        <p class="text-xs text-slate-500 mt-1">Pencarian dikunci untuk menjaga keamanan transaksi.</p>
+                    </div>
+                    <form action="{{ route('teller.unlock') }}" method="POST">
+                        @csrf
+                        <button type="submit"
+                            class="bg-slate-900 hover:bg-black text-white text-xs font-semibold py-2 px-4 rounded-md shadow-sm transition">
+                            Ganti Nasabah
+                        </button>
+                    </form>
+                </div>
+            @else
+                <form action="{{ route('teller.transaksi') }}" method="GET" class="mb-6 flex gap-2">
+                    <input type="text" name="search" id="searchInput" placeholder="Ketik NIS atau Nomor Rekening..."
+                        value="{{ request('search') }}"
+                        class="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900 text-sm" required>
+                    <button type="submit" class="bg-gray-900 text-white px-5 py-2.5 rounded-lg hover:bg-black font-semibold text-sm transition">Cari</button>
+                    <button type="button" id="scanQrBtn"
+                        class="bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 flex items-center justify-center transition"
+                        title="Scan QR Code">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
+                            <path
+                                d="M0 .5A.5.5 0 0 1 .5 0h3a.5.5 0 0 1 0 1H1v2.5a.5.5 0 0 1-1 0v-3Zm12 0a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-1 0V1h-2.5a.5.5 0 0 1-.5-.5ZM.5 12a.5.5 0 0 1 .5.5V15h2.5a.5.5 0 0 1 0 1h-3a.5.5 0 0 1-.5-.5v-3a.5.5 0 0 1 .5-.5Zm15 0a.5.5 0 0 1 .5.5v3a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1 0-1H15v-2.5a.5.5 0 0 1 .5-.5ZM4 4h1v1H4V4Z" />
+                            <path d="M7 2H2v5h5V2ZM3 3h3v3H3V3Zm2 8H4v1h1v-1Z" />
+                            <path d="M7 9H2v5h5V9Zm-4 1h3v3H3v-3Zm8-6h1v1h-1V4Z" />
+                            <path
+                                d="M9 2h5v5H9V2Zm1 1v3h3V3h-3ZM8 8v2h1v1H8v1h2v-2h1v2h1v-1h2v-1h-3V8H8Zm2 2H9V9h1v1Zm4 2h-1v1h-2v1h3v-2Zm-4 2v-1H8v1z" />
+                            <path d="M12 9h2V8h-2v1Z" />
+                        </svg>
+                    </button>
+                </form>
+
+                <!-- Container Scanner QR -->
+                <div id="reader-container" class="hidden mb-6 border rounded-lg overflow-hidden">
+                    <div class="bg-gray-800 text-white p-2.5 text-sm flex justify-between items-center">
+                        <span>Arahkan QR Code ke Kamera</span>
+                        <button type="button" id="closeScannerBtn" class="text-red-400 hover:text-red-300 font-bold">Tutup</button>
+                    </div>
+                    <div id="reader" width="100%"></div>
+                </div>
+            @endif
+
             @if(isset($customer))
-                <div class="bg-gray-50 border p-4 rounded-lg">
-                    <h3 class="font-bold text-gray-700 mb-2">Profil Nasabah</h3>
+                <div class="bg-white border border-gray-200 rounded-lg p-5 shadow-sm">
+                    <h3 class="text-sm font-bold text-gray-800 uppercase tracking-wide border-b pb-3 mb-4">Profil Nasabah</h3>
                     <table class="w-full text-sm">
-                        <tr>
-                            <td class="py-1 text-gray-500 w-1/3">No. Rekening</td>
-                            <td class="font-semibold">{{ $customer->account_number }}</td>
+                        <tr class="border-b border-gray-100">
+                            <td class="py-2.5 px-2 text-gray-500 w-2/5">No. Rekening</td>
+                            <td class="py-2.5 px-2 font-mono font-bold text-gray-900">{{ $customer->account_number }}</td>
+                        </tr>
+                        <tr class="border-b border-gray-100">
+                            <td class="py-2.5 px-2 text-gray-500">NIS</td>
+                            <td class="py-2.5 px-2 font-mono font-semibold text-gray-900">{{ $customer->student_id }}</td>
+                        </tr>
+                        <tr class="border-b border-gray-100">
+                            <td class="py-2.5 px-2 text-gray-500">Nama</td>
+                            <td class="py-2.5 px-2 font-bold text-gray-900">{{ $customer->student_name }}</td>
+                        </tr>
+                        <tr class="border-b border-gray-100">
+                            <td class="py-2.5 px-2 text-gray-500">Kelas</td>
+                            <td class="py-2.5 px-2 font-medium text-gray-900">{{ $customer->class }}</td>
                         </tr>
                         <tr>
-                            <td class="py-1 text-gray-500">NIS</td>
-                            <td class="font-semibold">{{ $customer->student_id }}</td>
-                        </tr>
-                        <tr>
-                            <td class="py-1 text-gray-500">Nama</td>
-                            <td class="font-semibold">{{ $customer->student_name }}</td>
-                        </tr>
-                        <tr>
-                            <td class="py-1 text-gray-500">Kelas</td>
-                            <td class="font-semibold">{{ $customer->class }}</td>
-                        </tr>
-                        <tr>
-                            <td class="py-1 text-gray-500">Saldo Saat Ini</td>
-                            <td class="font-bold text-lg text-green-600">Rp {{ number_format($customer->balance, 0, ',', '.') }}
+                            <td class="py-3 px-2 text-gray-500">Saldo Saat Ini</td>
+                            <td class="py-3 px-2 font-bold text-xl text-emerald-600">
+                                Rp {{ number_format($customer->balance, 0, ',', '.') }}
                             </td>
                         </tr>
                     </table>
                 </div>
             @elseif(request('search'))
-                <div class="text-red-500 text-sm">Data nasabah tidak ditemukan.</div>
+                <div class="text-red-500 text-sm p-4 bg-red-50 rounded-lg border border-red-200">Data nasabah tidak ditemukan.</div>
             @endif
         </div>
 
         <!-- Kolom Kanan: Form Transaksi -->
-        <div class="bg-white border border-gray-200 shadow-sm rounded-lg p-6">
-            <h2 class="text-lg font-bold border-b pb-2 mb-4">Form Transaksi</h2>
+        <div class="bg-white border border-gray-200 shadow-sm rounded-xl p-6 lg:p-7">
+            <h2 class="text-lg font-bold border-b pb-3 mb-5 text-gray-800">Form Transaksi</h2>
 
-            @if(isset($customer))
+            @if(isset($customer) && $customer->status === \App\Models\Customer::STATUS_PENDING)
+                @include('teller.activation')
+            @elseif(isset($customer) && $customer->status !== 'Aktif')
+                <p class="text-red-700">Rekening diblokir. Hubungi administrator; transaksi tidak dapat dilakukan.</p>
+            @elseif(isset($customer))
+                @if(isset($pendingWithdrawal))
+                    <!-- Notifikasi Status Penarikan Pending -->
+                    <div class="bg-blue-50 border border-blue-200 text-blue-900 p-4 rounded-lg mb-5">
+                        <div class="flex items-start justify-between gap-3">
+                            <div>
+                                <span
+                                    class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-800 mb-1">
+                                    Menunggu Otorisasi Nasabah
+                                </span>
+                                <p class="text-sm font-semibold">Penarikan Rp
+                                    {{ number_format($pendingWithdrawal->amount, 0, ',', '.') }}
+                                </p>
+                                <p class="text-xs text-blue-700 mt-1">
+                                    Permintaan penarikan telah dikirim. Nasabah harus memasukkan PIN Transaksi pada aplikasi
+                                    mobile untuk menyelesaikan transaksi ini.
+                                </p>
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <a href="{{ route('teller.transaksi') }}"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1.5 px-3 rounded shadow transition">
+                                    Periksa Status
+                                </a>
+                                <form action="{{ route('teller.withdraw.cancel', $pendingWithdrawal->id) }}" method="POST"
+                                    onsubmit="return confirm('Batalkan permintaan penarikan ini?')">
+                                    @csrf
+                                    <button type="submit"
+                                        class="bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 text-xs font-medium py-1.5 px-3 rounded transition">
+                                        Batalkan
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                @endif
+
                 <form action="{{ route('teller.deposit') }}" method="POST" id="formTransaksi">
                     @csrf
                     <input type="hidden" name="customer_id" value="{{ $customer->id }}">
 
                     <div class="mb-4">
                         <label class="block text-sm font-bold text-gray-700 mb-2">Jenis Transaksi</label>
-                        <div class="flex gap-4">
+                        <div class="flex flex-wrap gap-3">
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input type="radio" name="jenis" value="setoran" checked
-                                    onclick="document.getElementById('pinGroup').style.display='none'; this.form.action='{{ route('teller.deposit') }}'">
+                                    onclick="toggleFields(false, false, '{{ route('teller.deposit') }}')">
                                 <span
-                                    class="px-4 py-2 bg-green-100 text-green-800 border border-green-300 rounded hover:bg-green-200">Setoran</span>
+                                    class="px-3.5 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded text-sm font-medium hover:bg-green-100">Setoran</span>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input type="radio" name="jenis" value="penarikan"
-                                    onclick="document.getElementById('pinGroup').style.display='block'; this.form.action='{{ route('teller.withdraw') }}'">
+                                    onclick="toggleFields(true, false, '{{ route('teller.withdraw') }}')">
                                 <span
-                                    class="px-4 py-2 bg-red-100 text-red-800 border border-red-300 rounded hover:bg-red-200">Penarikan</span>
+                                    class="px-3.5 py-1.5 bg-red-50 text-red-700 border border-red-200 rounded text-sm font-medium hover:bg-red-100">Penarikan</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="jenis" value="setoran_koreksi"
+                                    onclick="toggleFields(false, true, '{{ route('teller.deposit') }}')">
+                                <span
+                                    class="px-3.5 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded text-sm font-medium hover:bg-amber-100">Setoran
+                                    Koreksi</span>
+                            </label>
+                            <label class="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="jenis" value="penarikan_koreksi"
+                                    onclick="toggleFields(false, true, '{{ route('teller.withdraw') }}')">
+                                <span
+                                    class="px-3.5 py-1.5 bg-orange-50 text-orange-700 border border-orange-200 rounded text-sm font-medium hover:bg-orange-100">Penarikan
+                                    Koreksi</span>
                             </label>
                         </div>
                     </div>
 
+                    <input type="hidden" name="is_koreksi" id="is_koreksi" value="0">
+
                     <div class="mb-4">
                         <label class="block text-sm font-bold text-gray-700 mb-2">Nominal (Rp)</label>
                         <input type="number" name="amount"
-                            class="w-full px-4 py-2 border rounded focus:outline-none focus:border-amber-500" required
+                            class="w-full px-4 py-2 border rounded focus:outline-none focus:border-amber-500 text-sm" required
                             min="1000">
                     </div>
 
                     <div class="mb-4">
                         <label class="block text-sm font-bold text-gray-700 mb-2">Keterangan (Opsional)</label>
                         <input type="text" name="description"
-                            class="w-full px-4 py-2 border rounded focus:outline-none focus:border-amber-500">
+                            class="w-full px-4 py-2 border rounded focus:outline-none focus:border-amber-500 text-sm">
                     </div>
 
-                    <div class="mb-6" id="pinGroup" style="display: none;">
-                        <label class="block text-sm font-bold text-gray-700 mb-2">PIN Nasabah (Wajib untuk Penarikan)</label>
-                        <input type="password" name="pin"
-                            class="w-full px-4 py-2 border rounded focus:outline-none focus:border-red-500">
+                    <!-- Informasi Otorisasi PIN Mobile untuk Penarikan Biasa -->
+                    <div class="mb-4 bg-blue-50 border border-blue-200 text-blue-900 p-3 rounded-lg text-xs"
+                        id="mobileNoticeGroup" style="display: none;">
+                        <span class="font-bold block mb-0.5 text-blue-950">Otorisasi PIN di Aplikasi Mobile</span>
+                        <p class="text-blue-800">
+                            Setelah penarikan dilakukan oleh teller maka proses selanjutnya menunggu konfirmasi pin transaksi
+                            oleh nasabah dan permintaan konfirmasi penarikan akan dikirim ke aplikasi mobile nasabah.
+                        </p>
                     </div>
 
-                    <button type="submit" class="w-full bg-gray-900 text-white font-bold py-3 px-4 rounded hover:bg-black">
-                        Submit Transaksi
+                    <div class="mb-4" id="koreksiGroup" style="display: none;">
+                        <label class="block text-sm font-bold text-gray-700 mb-2">Kode Sandi Koreksi</label>
+                        <input type="password" name="sandi_koreksi"
+                            class="w-full px-4 py-2 border rounded focus:outline-none focus:border-amber-500 text-sm">
+                        <p class="text-xs text-gray-500 mt-1">Masukkan kode sandi Supervisor untuk otorisasi
+                            transaksi koreksi.</p>
+                    </div>
+
+                    <button type="submit" @if(isset($pendingWithdrawal)) disabled
+                    class="w-full bg-gray-400 text-white font-bold py-3 px-4 rounded cursor-not-allowed text-sm" @else
+                            class="w-full bg-gray-900 hover:bg-black text-white font-bold py-3 px-4 rounded shadow transition text-sm"
+                        @endif>
+                        @if(isset($pendingWithdrawal))
+                            Menunggu Otorisasi Nasabah...
+                        @else
+                            Submit Transaksi <span class="text-xs font-normal opacity-75">(Ctrl+Enter)</span>
+                        @endif
                     </button>
                 </form>
             @else
@@ -155,25 +276,28 @@
 
     </div>
 
-    <!-- HTML5-QRCode Library -->
-    <script src="https://unpkg.com/html5-qrcode"></script>
+    <!-- HTML5-QRCode Library (Local & Offline Ready) -->
+    <script src="{{ asset('html5-qrcode.min.js') }}"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const typeSelect = document.querySelector('select[name="transaction_type"]');
-            const pinGroup = document.getElementById('pinGroup');
-            const formAction = document.getElementById('transactionForm');
+        function toggleFields(isWithdraw, isKoreksi, actionUrl) {
+            const mobileNoticeGroup = document.getElementById('mobileNoticeGroup');
+            const koreksiGroup = document.getElementById('koreksiGroup');
+            const isKoreksiInput = document.getElementById('is_koreksi');
+            const formTransaksi = document.getElementById('formTransaksi');
 
-            if (typeSelect && pinGroup && formAction) {
-                typeSelect.addEventListener('change', function () {
-                    if (this.value === 'withdraw') {
-                        pinGroup.style.display = 'block';
-                        formAction.action = "{{ route('teller.withdraw') }}";
-                    } else {
-                        pinGroup.style.display = 'none';
-                        formAction.action = "{{ route('teller.deposit') }}";
-                    }
-                });
-            }
+            if (mobileNoticeGroup) mobileNoticeGroup.style.display = (isWithdraw && !isKoreksi) ? 'block' : 'none';
+            if (koreksiGroup) koreksiGroup.style.display = isKoreksi ? 'block' : 'none';
+            if (isKoreksiInput) isKoreksiInput.value = isKoreksi ? '1' : '0';
+            if (formTransaksi) formTransaksi.action = actionUrl;
+        }
+
+        document.addEventListener('DOMContentLoaded', function () {
+            document.addEventListener('keydown', function (e) {
+                if (e.ctrlKey && e.key === 'Enter') {
+                    let form = document.getElementById('formTransaksi');
+                    if (form) form.submit();
+                }
+            });
 
             // Scanner Logic
             const scanBtn = document.getElementById('scanQrBtn');
@@ -184,12 +308,17 @@
 
             if (scanBtn) {
                 scanBtn.addEventListener('click', function () {
+                    if (typeof Html5Qrcode === 'undefined') {
+                        alert("Library pemindai QR belum siap atau gagal dimuat.");
+                        return;
+                    }
+
                     scannerContainer.classList.remove('hidden');
-                    
+
                     if (!html5QrCode) {
                         html5QrCode = new Html5Qrcode("reader");
                     }
-                    
+
                     if (!html5QrCode.isScanning) {
                         html5QrCode.start(
                             { facingMode: "environment" },
@@ -200,8 +329,8 @@
                             onScanSuccess,
                             onScanFailure
                         ).catch(err => {
-                            alert("Gagal mengakses kamera. Pastikan browser Anda mengizinkan akses kamera, atau gunakan koneksi HTTPS / localhost.");
-                            console.error(err);
+                            alert("Gagal mengakses kamera: " + err + "\n\nPastikan browser Anda mengizinkan akses kamera dan Anda mengakses lewat http://localhost:8000 atau https.");
+                            console.error("Camera access error:", err);
                         });
                     }
                 });
@@ -221,24 +350,34 @@
             }
 
             function onScanSuccess(decodedText, decodedResult) {
-                // handle the scanned code
-                searchInput.value = decodedText;
+                if (searchInput) {
+                    searchInput.value = decodedText;
+                }
 
-                // close scanner
                 if (html5QrCode && html5QrCode.isScanning) {
                     html5QrCode.stop().then(() => {
                         html5QrCode.clear();
                         scannerContainer.classList.add('hidden');
-                        // submit form
-                        searchInput.closest('form').submit();
+                        if (searchInput) {
+                            searchInput.closest('form').submit();
+                        }
                     }).catch(err => {
                         console.log("Error stopping scanner", err);
+                        scannerContainer.classList.add('hidden');
+                        if (searchInput) {
+                            searchInput.closest('form').submit();
+                        }
                     });
+                } else {
+                    scannerContainer.classList.add('hidden');
+                    if (searchInput) {
+                        searchInput.closest('form').submit();
+                    }
                 }
             }
 
             function onScanFailure(error) {
-                // handle scan failure, usually better to ignore and keep scanning.
+                // Ignore per-frame scanning noise
             }
         });
     </script>

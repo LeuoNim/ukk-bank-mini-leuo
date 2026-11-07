@@ -9,12 +9,12 @@ use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
-    //menampilkan daftar data pengguna / petugas
+    // menampilkan daftar data pengguna / petugas
     public function index(Request $request)
     {
         $query = User::query();
 
-        //filter berdasarkan role jika ada
+        // filter berdasarkan role jika ada
         if ($request->has('role')) {
             $query->where('role', $request->role);
         }
@@ -24,80 +24,80 @@ class UserController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Daftar pengguna berhasil diambil',
-            'data'    => $users
+            'data' => $users,
         ], 200);
     }
 
-    //menambah pengguna / petugas baru
+    // menambah pengguna / petugas baru
     public function store(Request $request)
     {
-        //1. Validasi input
+        // 1. Validasi input
         $request->validate([
-            'username'   => 'required|string|unique:users,username',
-            'password'   => 'required|string|min:4',
+            'username' => 'required|string|unique:users,username',
+            'password' => 'required|string|min:4',
             'staff_name' => 'required|string|max:100',
-            'role'       => 'required|in:Administrator,Teller,Supervisor'
+            'role' => 'required|in:Administrator,Teller,Supervisor',
         ]);
 
-        //2. Simpan user baru
+        // 2. Simpan user baru
         $user = User::create([
-            'username'   => $request->username,
-            'password'   => Hash::make($request->password),
+            'username' => $request->username,
+            'password' => Hash::make($request->password),
             'staff_name' => $request->staff_name,
-            'role'       => $request->role
+            'role' => $request->role,
         ]);
 
         return response()->json([
             'success' => true,
             'message' => 'Akun pengguna berhasil ditambahkan',
-            'data'    => $user
+            'data' => $user,
         ], 201);
     }
 
-    //menampilkan detail data pengguna
+    // menampilkan detail data pengguna
     public function show($id)
     {
         $user = User::find($id);
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Data pengguna tidak ditemukan'
+                'message' => 'Data pengguna tidak ditemukan',
             ], 404);
         }
 
         return response()->json([
             'success' => true,
             'message' => 'Detail pengguna berhasil diambil',
-            'data'    => $user
+            'data' => $user,
         ], 200);
     }
 
-    //mengupdate data pengguna
+    // mengupdate data pengguna
     public function update(Request $request, $id)
     {
         $user = User::find($id);
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Data pengguna tidak ditemukan'
+                'message' => 'Data pengguna tidak ditemukan',
             ], 404);
         }
 
-        //1. Validasi input
+        // 1. Validasi input
         $request->validate([
-            'username'   => 'required|string|unique:users,username,' . $id,
+            'username' => 'required|string|unique:users,username,'.$id,
             'staff_name' => 'required|string|max:100',
-            'role'       => 'required|in:Administrator,Teller,Supervisor',
-            'password'   => 'nullable|string|min:4'
+            'role' => 'required|in:Administrator,Teller,Supervisor',
+            'password' => 'nullable|string|min:4',
         ]);
 
-        //2. Siapkan data yang diupdate
+        // 2. Siapkan data yang diupdate
         $data = [
-            'username'   => $request->username,
+            'username' => $request->username,
             'staff_name' => $request->staff_name,
-            'role'       => $request->role,
+            'role' => $request->role,
         ];
 
         if ($request->filled('password')) {
@@ -109,27 +109,27 @@ class UserController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Data pengguna berhasil diperbarui',
-            'data'    => $user
+            'data' => $user,
         ], 200);
     }
 
-    //menghapus data pengguna
+    // menghapus data pengguna
     public function destroy(Request $request, $id)
     {
         $user = User::find($id);
 
-        if (!$user) {
+        if (! $user) {
             return response()->json([
                 'success' => false,
-                'message' => 'Data pengguna tidak ditemukan'
+                'message' => 'Data pengguna tidak ditemukan',
             ], 404);
         }
 
-        //cegah menghapus akun sendiri
+        // cegah menghapus akun sendiri
         if ($request->user()->id == $user->id) {
             return response()->json([
                 'success' => false,
-                'message' => 'Anda tidak dapat menghapus akun Anda sendiri'
+                'message' => 'Anda tidak dapat menghapus akun Anda sendiri',
             ], 400);
         }
 
@@ -137,7 +137,7 @@ class UserController extends Controller
 
         return response()->json([
             'success' => true,
-            'message' => 'Akun pengguna berhasil dihapus'
+            'message' => 'Akun pengguna berhasil dihapus',
         ], 200);
     }
 }

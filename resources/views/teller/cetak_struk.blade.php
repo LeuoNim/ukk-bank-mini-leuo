@@ -44,6 +44,12 @@
                     <td class="py-1 font-mono font-bold text-gray-900">{{ $transaction->transaction_code }}</td>
                 </tr>
                 <tr>
+                    <td class="py-1 text-gray-600">Jenis Transaksi</td>
+                    <td class="py-1 font-bold {{ in_array($transaction->transaction_type, ['Setoran', 'Setoran Koreksi']) ? 'text-green-700' : 'text-red-700' }}">
+                        {{ strtoupper($transaction->transaction_type) }}
+                    </td>
+                </tr>
+                <tr>
                     <td class="py-1 text-gray-600">Tanggal</td>
                     <td class="py-1 text-gray-900">{{ \Carbon\Carbon::parse($transaction->transaction_date)->format('d-m-Y H:i') }}</td>
                 </tr>
@@ -78,8 +84,20 @@
 
         <!-- Nominal -->
         <div class="text-center my-6">
-            <p class="text-gray-600 text-sm mb-1">TOTAL TRANSAKSI</p>
-            <p class="text-3xl font-bold text-gray-900">Rp {{ number_format($transaction->amount, 0, ',', '.') }}</p>
+            <p class="text-gray-600 text-sm mb-1 uppercase font-semibold">Nominal {{ $transaction->transaction_type }}</p>
+            <p class="text-3xl font-bold {{ in_array($transaction->transaction_type, ['Setoran', 'Setoran Koreksi']) ? 'text-green-700' : 'text-red-700' }}">
+                Rp {{ number_format($transaction->amount, 0, ',', '.') }}
+            </p>
+        </div>
+
+        <div class="border-t border-dashed border-gray-300 my-4"></div>
+
+        <!-- Saldo Terakhir -->
+        <div class="bg-gray-50 border border-gray-200 rounded p-4 text-center my-4">
+            <p class="text-xs text-gray-500 uppercase tracking-wider font-semibold mb-1">Sisa Saldo Terakhir Rekening</p>
+            <p class="text-2xl font-bold text-gray-900">
+                Rp {{ number_format($transaction->customer->balance, 0, ',', '.') }}
+            </p>
         </div>
 
         <div class="border-t border-dashed border-gray-300 my-4"></div>

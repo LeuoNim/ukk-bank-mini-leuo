@@ -16,22 +16,23 @@ class Transaction extends Model
         'transaction_date',
         'transaction_type',
         'amount',
-        'description'
+        'description',
+        'status',
     ];
 
-    //relasi ke nasabah
+    // relasi ke nasabah (tetap terbaca walau nasabah non-aktif / di-soft delete)
     public function customer()
     {
-        return $this->belongsTo(Customer::class, 'customer_id');
+        return $this->belongsTo(Customer::class, 'customer_id')->withTrashed();
     }
 
-    //relasi ke petugas teller
+    // relasi ke petugas teller
     public function user()
     {
         return $this->belongsTo(User::class, 'user_id');
     }
 
-    //relasi ke pembukuan jurnal
+    // relasi ke pembukuan jurnal
     public function journals()
     {
         return $this->hasMany(Accounting_Journal::class, 'transaction_id');

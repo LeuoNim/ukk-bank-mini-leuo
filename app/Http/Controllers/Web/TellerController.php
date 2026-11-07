@@ -2,27 +2,65 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Controller;
+use App\Models\Accounting_Journal;
+use App\Models\Customer;
+use App\Models\DailyReport;
+use App\Models\Transaction;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class TellerController extends Controller
 {
     public function transaksi(Request $request)
     {
         $customer = null;
-        if ($request->search) {
-            $customer = \App\Models\Customer::where('student_id', $request->search)
-                        ->orWhere('account_number', $request->search)
-                        ->first();
+
+        // Ambil nasabah jika sudah terkunci di session
+        if (session()->has('locked_customer_id')) {
+            $customer = Customer::find(session('locked_customer_id'));
         }
-        return view('teller.transaksi', compact('customer'));
+
+        // Jika belum terkunci dan ada input pencarian atau hasil scan QR
+        if (! $customer && $request->filled('search')) {
+            $search = trim($request->search);
+            $customer = Customer::where('student_id', $search)
+                ->orWhere('account_number', $search)
+                ->first();
+
+            // Kunci nasabah ke dalam sesi jika ditemukan
+            if ($customer) {
+                session(['locked_customer_id' => $customer->id]);
+            }
+        }
+
+        $isLocked = ! empty($customer);
+
+        $pendingWithdrawal = null;
+        if ($customer) {
+            $pendingWithdrawal = Transaction::where('customer_id', $customer->id)
+                ->where('status', 'pending')
+                ->latest()
+                ->first();
+        }
+
+        return view('teller.transaksi', compact('customer', 'isLocked', 'pendingWithdrawal'));
+    }
+
+    public function unlockCustomer()
+    {
+        session()->forget('locked_customer_id');
+
+        return redirect()->route('teller.transaksi');
     }
 
     public function riwayat(Request $request)
     {
-        $query = \App\Models\Transaction::with('customer')
-                ->where('user_id', auth()->id());
-                
+        $query = Transaction::with('customer')
+            ->where('user_id', auth()->id());
+
         if ($request->date) {
             $query->whereDate('transaction_date', $request->date);
         } else {
@@ -33,53 +71,56 @@ class TellerController extends Controller
             $query->where('transaction_type', $request->type);
         }
 
-        $transactions = $query->orderBy('id', 'desc')->get();
+        $transactions = $query->orderBy('id', 'desc')->paginate(15)->withQueryString();
+
         return view('teller.riwayat', compact('transactions'));
     }
 
     public function laporan()
     {
         $today = date('Y-m-d');
-        
-        $report_today = \App\Models\DailyReport::where('teller_id', auth()->id())
-                        ->whereDate('report_date', $today)
-                        ->first();
+
+        $report_today = DailyReport::where('teller_id', auth()->id())
+            ->whereDate('report_date', $today)
+            ->first();
 
         if ($report_today) {
             $total_deposit = $report_today->total_deposit;
             $total_withdrawal = $report_today->total_withdrawal;
         } else {
-            $total_deposit = \App\Models\Transaction::where('user_id', auth()->id())
-                            ->whereDate('transaction_date', $today)
-                            ->where('transaction_type', 'Setoran')
-                            ->sum('amount');
-                            
-            $total_withdrawal = \App\Models\Transaction::where('user_id', auth()->id())
-                            ->whereDate('transaction_date', $today)
-                            ->where('transaction_type', 'Penarikan')
-                            ->sum('amount');
+            $total_deposit = Transaction::where('user_id', auth()->id())
+                ->whereDate('transaction_date', $today)
+                ->where('transaction_type', 'Setoran')
+                ->where('status', 'success')
+                ->sum('amount');
+
+            $total_withdrawal = Transaction::where('user_id', auth()->id())
+                ->whereDate('transaction_date', $today)
+                ->where('transaction_type', 'Penarikan')
+                ->where('status', 'success')
+                ->sum('amount');
         }
 
-        $reports = \App\Models\DailyReport::where('teller_id', auth()->id())
-                        ->whereDate('report_date', '<', $today)
-                        ->orderBy('report_date', 'desc')
-                        ->take(10)
-                        ->get();
+        $reports = DailyReport::where('teller_id', auth()->id())
+            ->whereDate('report_date', '<', $today)
+            ->orderBy('report_date', 'desc')
+            ->take(10)
+            ->get();
 
         // Saldo Awal (sebelum hari ini)
         // Hitung total debet kas - total kredit kas sebelum hari ini
-        $debet_sebelumnya = \App\Models\Accounting_Journal::where('account_code', '111')
-                            ->where('position', 'Debet')
-                            ->whereHas('transaction', function($q) use ($today) {
-                                $q->whereDate('transaction_date', '<', $today);
-                            })->sum('amount');
-                            
-        $kredit_sebelumnya = \App\Models\Accounting_Journal::where('account_code', '111')
-                            ->where('position', 'Kredit')
-                            ->whereHas('transaction', function($q) use ($today) {
-                                $q->whereDate('transaction_date', '<', $today);
-                            })->sum('amount');
-                            
+        $debet_sebelumnya = Accounting_Journal::where('account_code', '111')
+            ->where('position', 'Debet')
+            ->whereHas('transaction', function ($q) use ($today) {
+                $q->whereDate('transaction_date', '<', $today);
+            })->sum('amount');
+
+        $kredit_sebelumnya = Accounting_Journal::where('account_code', '111')
+            ->where('position', 'Kredit')
+            ->whereHas('transaction', function ($q) use ($today) {
+                $q->whereDate('transaction_date', '<', $today);
+            })->sum('amount');
+
         $initial_balance = $debet_sebelumnya - $kredit_sebelumnya;
         $final_balance = $initial_balance + $total_deposit - $total_withdrawal;
 
@@ -89,9 +130,17 @@ class TellerController extends Controller
     public function deposit(Request $request)
     {
         try {
-            app(\App\Http\Controllers\Api\TransactionController::class)->deposit($request);
-            return redirect()->back()->with('success', 'Setoran tunai berhasil diproses.');
-        } catch (\Illuminate\Validation\ValidationException $e) {
+            $response = app(TransactionController::class)->deposit($request);
+            $data = json_decode($response->getContent());
+            if (! isset($data->success) || ! $data->success) {
+                return redirect()->back()->with('error', $data->message ?? 'Setoran gagal diproses.');
+            }
+            $trxId = $data->data->id ?? null;
+
+            return redirect()->back()
+                ->with('success', 'Setoran tunai berhasil diproses.')
+                ->with('last_transaction_id', $trxId);
+        } catch (ValidationException $e) {
             return redirect()->back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());
@@ -101,33 +150,57 @@ class TellerController extends Controller
     public function withdraw(Request $request)
     {
         try {
-            $response = app(\App\Http\Controllers\Api\TransactionController::class)->withdraw($request);
+            $response = app(TransactionController::class)->withdraw($request);
             $data = json_decode($response->getContent());
-            if (!$data->success) {
-                return redirect()->back()->with('error', $data->message);
+            if (! isset($data->success) || ! $data->success) {
+                return redirect()->back()->with('error', $data->message ?? 'Penarikan gagal diproses.');
             }
-            return redirect()->back()->with('success', 'Penarikan tunai berhasil diproses.');
-        } catch (\Illuminate\Validation\ValidationException $e) {
+            $trxId = $data->data->id ?? null;
+            $status = $data->status ?? 'success';
+
+            if ($status === 'pending') {
+                return redirect()->back()
+                    ->with('pending_info', $data->message)
+                    ->with('pending_transaction_id', $trxId);
+            }
+
+            return redirect()->back()
+                ->with('success', 'Penarikan tunai berhasil diproses.')
+                ->with('last_transaction_id', $trxId);
+        } catch (ValidationException $e) {
             return redirect()->back()->withErrors($e->errors())->withInput();
         } catch (\Exception $e) {
             return redirect()->back()->with('error', $e->getMessage());
         }
     }
 
+    public function cancelWithdrawal($id)
+    {
+        $updated = Transaction::where('id', $id)->where('user_id', auth()->id())
+            ->where('status', 'pending')->update(['status' => 'cancelled']);
+        if ($updated) {
+
+            return redirect()->back()->with('success', 'Permintaan penarikan berhasil dibatalkan.');
+        }
+
+        return redirect()->back()->with('error', 'Transaksi tidak ditemukan atau sudah diproses.');
+    }
+
     public function submitLaporan(Request $request)
     {
-        $response = app(\App\Http\Controllers\Api\ReportController::class)->submit($request);
+        $response = app(ReportController::class)->submit($request);
         $data = json_decode($response->getContent());
-        if (!$data->success) {
+        if (! $data->success) {
             return redirect()->back()->with('error', $data->message);
         }
+
         return redirect()->back()->with('success', 'Laporan hari ini berhasil dikirim ke Supervisor.');
     }
 
     public function cetakStruk($id)
     {
-        $transaction = \App\Models\Transaction::with(['customer', 'user'])->findOrFail($id);
-        
+        $transaction = Transaction::with(['customer', 'user'])->findOrFail($id);
+
         // Pastikan hanya bisa mencetak transaksi miliknya sendiri
         if ($transaction->user_id !== auth()->id()) {
             abort(403, 'Akses ditolak.');

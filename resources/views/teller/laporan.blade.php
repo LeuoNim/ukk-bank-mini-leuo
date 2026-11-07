@@ -33,38 +33,59 @@
                 <span class="font-bold text-red-600 text-lg">Rp {{ number_format($total_withdrawal, 0, ',', '.') }}</span>
             </div>
 
-            <div class="flex justify-between items-center p-3 bg-blue-50 rounded border border-blue-200">
-                <span class="text-blue-900 font-bold">Saldo Akhir Sistem (=)</span>
-                <span class="font-bold text-blue-700 text-xl" id="finalBalanceText" data-amount="{{ $final_balance }}">Rp {{ number_format($final_balance, 0, ',', '.') }}</span>
+            @php
+                $isNegative = $final_balance < 0;
+            @endphp
+            <div class="flex justify-between items-center p-3.5 {{ $isNegative ? 'bg-red-50 border-red-200' : 'bg-blue-50 border-blue-200' }} rounded border">
+                <div>
+                    <span class="{{ $isNegative ? 'text-red-900' : 'text-blue-900' }} font-bold block">Saldo Akhir Sistem (=)</span>
+                    @if($isNegative)
+                        <span class="text-xs text-red-600 italic">Posisi kas minus karena penarikan melebihi setoran kas hari ini.</span>
+                    @endif
+                </div>
+                <span class="font-bold {{ $isNegative ? 'text-red-700' : 'text-blue-700' }} text-xl" id="finalBalanceText" data-amount="{{ $final_balance }}">Rp {{ number_format($final_balance, 0, ',', '.') }}</span>
             </div>
         </div>
 
         <div class="mt-6 border-t pt-4">
-            @if($report_today)
+            @if($report_today && $report_today->approval_status !== 'Rejected')
                 <div class="text-center">
                     <p class="text-sm text-gray-500 mb-2">Status Laporan Hari Ini:</p>
                     @if($report_today->approval_status == 'Pending')
-                        <span class="px-4 py-2 bg-amber-100 text-amber-800 rounded-full font-medium inline-block">Menunggu Persetujuan Supervisor</span>
+                        <span class="px-4 py-2 bg-amber-100 text-amber-800 rounded-full font-medium inline-block text-sm">Menunggu Persetujuan Supervisor</span>
                     @else
-                        <span class="px-4 py-2 bg-green-100 text-green-800 rounded-full font-medium inline-block">Disetujui</span>
+                        <span class="px-4 py-2 bg-green-100 text-green-800 rounded-full font-medium inline-block text-sm">Disetujui</span>
                     @endif
                 </div>
             @else
+                @if($report_today && $report_today->approval_status === 'Rejected')
+                    <div class="bg-red-50 border border-red-200 text-red-800 p-3.5 rounded-lg mb-4 text-left">
+                        <span class="font-bold block text-sm">Laporan Ditolak oleh Supervisor</span>
+                        @if($report_today->notes)
+                            <p class="text-xs text-red-700 mt-1"><strong>Catatan:</strong> {{ $report_today->notes }}</p>
+                        @endif
+                        <p class="text-xs text-red-600 mt-1 italic">Silakan lakukan rekonsiliasi kas dan ajukan ulang laporan tutup kas di bawah ini.</p>
+                    </div>
+                @endif
+
                 @if($total_deposit == 0 && $total_withdrawal == 0)
-                    <div class="bg-gray-100 text-gray-500 text-center py-3 px-4 rounded font-medium border border-gray-200">
+                    <div class="bg-gray-100 text-gray-500 text-center py-3 px-4 rounded font-medium border border-gray-200 text-sm">
                         Belum ada transaksi hari ini.<br>
-                        <span class="text-sm">Laporan tidak dapat di-submit.</span>
+                        <span class="text-xs">Laporan tidak dapat di-submit.</span>
                     </div>
                 @else
                     <form action="{{ route('teller.laporan.submit') }}" method="POST" id="formLaporan">
                         @csrf
                         <div class="mb-4">
-                            <label class="block text-gray-700 text-sm font-bold mb-2">Jumlah Uang Fisik di Laci Teller (Rp)</label>
-                            <input type="number" id="physicalCash" name="physical_cash" class="w-full px-3 py-2 border rounded focus:outline-none focus:border-amber-500" required placeholder="Contoh: {{ $final_balance }}">
-                            <p id="cashWarning" class="text-red-500 text-xs italic mt-1 hidden">Uang fisik tidak sesuai dengan sistem! Laporan tidak bisa disubmit.</p>
+                            <label class="block text-gray-700 text-sm font-bold mb-2">Konfirmasi Fisik Kas Teller (Rp)</label>
+                            <input type="number" id="physicalCash" name="physical_cash" class="w-full px-3 py-2 border rounded focus:outline-none focus:border-amber-500 text-sm" required placeholder="Ketik {{ $final_balance }}">
+                            <p class="text-xs text-gray-500 mt-1">
+                                Masukkan angka nominal sesuai Saldo Akhir Sistem (<strong>{{ $final_balance }}</strong>) untuk mengonfirmasi tutup kas.
+                            </p>
+                            <p id="cashWarning" class="text-red-500 text-xs italic mt-1 hidden">Nominal konfirmasi tidak cocok dengan perhitungan sistem!</p>
                         </div>
-                        <button type="submit" id="btnSubmitLaporan" class="w-full bg-gray-900 text-white font-bold py-3 px-4 rounded hover:bg-black opacity-50 cursor-not-allowed" disabled>
-                            Submit Laporan Ke Supervisor
+                        <button type="submit" id="btnSubmitLaporan" class="w-full bg-gray-900 text-white font-bold py-3 px-4 rounded hover:bg-black opacity-50 cursor-not-allowed text-sm" disabled>
+                            {{ ($report_today && $report_today->approval_status === 'Rejected') ? 'Ajukan Ulang Laporan Tutup Kas' : 'Submit Laporan Ke Supervisor' }}
                         </button>
                     </form>
 

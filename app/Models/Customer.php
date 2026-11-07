@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Laravel\Sanctum\HasApiTokens;
 
 class Customer extends Authenticatable
 {
-    use HasApiTokens;
+    public const STATUS_PENDING = 'BelumAktif';
 
-    //memaksa tabel model membaca tabel
+    use HasApiTokens, SoftDeletes;
+
+    // memaksa tabel model membaca tabel
     protected $table = 'customers';
 
     protected $fillable = [
@@ -18,14 +21,34 @@ class Customer extends Authenticatable
         'student_name',
         'class',
         'balance',
-        'pin'
+        'password',
+        'pin',
+        'status',
     ];
 
     protected $hidden = [
-        'pin'
+        'password',
+        'pin',
     ];
 
-    //relasi ke transaksi nasabah
+    protected function casts(): array
+    {
+        return [
+            'password' => 'hashed',
+        ];
+    }
+
+    public function getAuthPassword()
+    {
+        return $this->password ?? $this->pin;
+    }
+
+    public function hasCustomPassword(): bool
+    {
+        return ! empty($this->password);
+    }
+
+    // relasi ke transaksi nasabah
     public function transactions()
     {
         return $this->hasMany(Transaction::class, 'customer_id');

@@ -8,8 +8,8 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 #[Fillable(['username', 'password', 'staff_name', 'role'])]
 #[Hidden(['password', 'remember_token'])]

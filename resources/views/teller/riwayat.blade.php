@@ -59,5 +59,11 @@
             @endforelse
         </tbody>
     </table>
+
+    @if($transactions->hasPages())
+        <div class="mt-4 pt-4 border-t border-gray-100">
+            {{ $transactions->links() }}
+        </div>
+    @endif
 </div>
 @endsection

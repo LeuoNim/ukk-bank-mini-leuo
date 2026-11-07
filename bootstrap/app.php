@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Middleware\EnsureActiveCustomer;
+use App\Http\Middleware\RoleMiddleware;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -13,12 +15,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //daftar rolemiddleware
+        // daftar rolemiddleware
         $middleware->alias([
-            'role'  => \App\Http\Middleware\RoleMiddleware::class,
+            'role' => RoleMiddleware::class,
+            'customer.active' => EnsureActiveCustomer::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->dontFlash(['current_pin', 'new_pin', 'new_pin_confirmation', 'new_password', 'new_password_confirmation']);
         $exceptions->shouldRenderJsonWhen(
             fn (Request $request) => $request->is('api/*'),
         );
