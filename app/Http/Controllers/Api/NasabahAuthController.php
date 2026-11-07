@@ -136,6 +136,7 @@ class NasabahAuthController extends Controller
             'student_id' => 'required|string',
             'account_number' => 'required|string',
             'reset_type' => 'required|in:password,pin',
+            'verification_credential' => 'required|string',
             'new_password' => 'nullable|string|min:6|confirmed',
             'new_pin' => 'nullable|numeric|digits:6|confirmed',
         ]);
@@ -161,7 +162,7 @@ class NasabahAuthController extends Controller
         if (! $customer) {
             return response()->json([
                 'success' => false,
-                'message' => 'Kombinasi NIS dan Nomor Rekening tidak cocok.',
+                'message' => 'Kombinasi NIS dan Nomor Rekening tidak ditemukan.',
             ], 404);
         }
 
@@ -172,10 +173,24 @@ class NasabahAuthController extends Controller
             ], 403);
         }
 
+        // Verifikasi kepemilikan sah via Cross-Credential
+        $verificationCred = (string) $request->input('verification_credential');
         if ($resetType === 'password') {
+            if (! Hash::check($verificationCred, $customer->pin)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Verifikasi Gagal: PIN Transaksi yang Anda masukkan salah. Jika Anda lupa PIN dan Password sekaligus, silakan kunjungi loket Teller sekolah untuk verifikasi identitas fisik.',
+                ], 403);
+            }
             $customer->password = Hash::make($request->input('new_password'));
-            $msg = 'Password login berhasil diperbarui! Silakan login kembali.';
+            $msg = 'Password login berhasil diperbarui! Silakan login kembali dengan password baru Anda.';
         } else {
+            if (! Hash::check($verificationCred, $customer->password)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Verifikasi Gagal: Password Akun yang Anda masukkan salah. Jika Anda lupa PIN dan Password sekaligus, silakan kunjungi loket Teller sekolah untuk verifikasi identitas fisik.',
+                ], 403);
+            }
             $customer->pin = Hash::make($request->input('new_pin'));
             $msg = 'PIN transaksi berhasil diperbarui!';
         }

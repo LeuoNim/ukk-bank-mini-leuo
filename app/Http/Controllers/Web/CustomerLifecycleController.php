@@ -71,8 +71,8 @@ class CustomerLifecycleController extends Controller
         $pin = $data['reset_type'] !== 'password' ? (string) random_int(100000, 999999) : null;
         DB::transaction(function () use ($customer, $password, $pin): void {
             $customer = Customer::whereKey($customer->id)->lockForUpdate()->firstOrFail();
-            if ($customer->status !== 'Aktif') {
-                throw ValidationException::withMessages(['reset_type' => 'Hanya rekening aktif yang dapat dipulihkan. Selesaikan aktivasi atau pembukaan blokir terlebih dahulu.']);
+            if ($customer->status === Customer::STATUS_PENDING) {
+                throw ValidationException::withMessages(['reset_type' => 'Rekening nasabah belum aktivasi. Harap lakukan aktivasi awal dan setoran pertama terlebih dahulu.']);
             }
             if ($password !== null) {
                 $customer->password = Hash::make($password);
@@ -80,6 +80,7 @@ class CustomerLifecycleController extends Controller
             if ($pin !== null) {
                 $customer->pin = Hash::make($pin);
             }
+            $customer->status = 'Aktif';
             $customer->save();
             $customer->tokens()->delete();
         });
@@ -90,18 +91,29 @@ class CustomerLifecycleController extends Controller
             ->header('Cache-Control', 'no-store, private');
     }
 
-    public function markPending(Customer $customer): RedirectResponse
+    public function markPending($id): RedirectResponse
     {
-        DB::transaction(function () use ($customer): void {
-            $customer = Customer::whereKey($customer->id)->lockForUpdate()->firstOrFail();
-            if ($customer->balance != 0 || $customer->transactions()->exists()) {
-                throw ValidationException::withMessages(['customer' => 'Rekening bersaldo atau memiliki riwayat transaksi tidak boleh dikembalikan menjadi belum aktivasi.']);
-            }
-            $customer->update(['status' => Customer::STATUS_PENDING]);
-            $customer->tokens()->delete();
-        });
-        Log::notice('customer.marked_pending', ['customer_id' => $customer->id, 'actor_id' => auth()->id()]);
+        $customer = Customer::find($id);
+        if (! $customer) {
+            return back()->with('error', 'Data nasabah tidak ditemukan atau sudah dihapus.');
+        }
 
-        return back()->with('success', 'Rekening ditandai nonaktif — belum aktivasi. Saldo tetap Rp0.');
+        try {
+            DB::transaction(function () use ($customer): void {
+                $c = Customer::whereKey($customer->id)->lockForUpdate()->firstOrFail();
+                if ($c->balance != 0 || $c->transactions()->exists()) {
+                    throw ValidationException::withMessages(['customer' => 'Rekening bersaldo atau memiliki riwayat transaksi tidak boleh dikembalikan menjadi belum aktivasi.']);
+                }
+                $c->update(['status' => Customer::STATUS_PENDING]);
+                $c->tokens()->delete();
+            });
+            Log::notice('customer.marked_pending', ['customer_id' => $customer->id, 'actor_id' => auth()->id()]);
+
+            return back()->with('success', 'Rekening ditandai nonaktif — belum aktivasi. Saldo tetap Rp0.');
+        } catch (ValidationException $e) {
+            return back()->withErrors($e->errors());
+        } catch (\Exception $e) {
+            return back()->with('error', $e->getMessage());
+        }
     }
 }

@@ -86,7 +86,8 @@ class TransactionController extends Controller
 
                 return response()->json(['success' => false, 'message' => 'Rekening belum aktif atau diblokir. Setoran ditolak.'], 403);
             }
-            if (($customer->balance + $modifier) < 10000) {
+            // Validasi sisa saldo minimum hanya berlaku jika saldo berkurang
+            if ($modifier < 0 && ($customer->balance + $modifier) < 10000) {
                 DB::rollBack();
 
                 return response()->json([

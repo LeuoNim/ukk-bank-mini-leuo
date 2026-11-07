@@ -111,10 +111,20 @@
             </table>
         </div>
 
-        @if($customers->hasPages())
-            <div class="mt-4 pt-4 border-t border-gray-100">
-                {{ $customers->links() }}
+        <div class="mt-4 pt-4 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between text-xs text-gray-500 gap-2">
+            <div>
+                Menampilkan {{ $customers->firstItem() ?? 0 }} - {{ $customers->lastItem() ?? 0 }} dari total {{ $customers->total() }} nasabah (Maks. 10 per halaman)
             </div>
-        @endif
+            @if($customers->hasPages())
+                <div>
+                    {{ $customers->links() }}
+                </div>
+            @else
+                <div class="inline-flex items-center gap-1 font-semibold text-gray-600">
+                    <span>Halaman:</span>
+                    <span class="px-2.5 py-1 bg-amber-500 text-white font-bold rounded shadow-sm text-xs">1</span>
+                </div>
+            @endif
+        </div>
     </div>
 @endsection

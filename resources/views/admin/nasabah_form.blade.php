@@ -82,9 +82,25 @@
             </div>
         </div>
 
+        @if(!isset($customer))
+            <div class="mb-4">
+                <label class="block text-gray-700 font-bold mb-1.5 text-sm">
+                    Setoran Awal (Rp)
+                    <span class="text-xs font-normal text-amber-700 ml-1">(Opsional — Minimal Rp 10.000 jika langsung diaktifkan)</span>
+                </label>
+                <input type="number" name="initial_deposit" id="initial_deposit"
+                    value="{{ old('initial_deposit', 0) }}" min="0" step="1000"
+                    placeholder="Contoh: 10000"
+                    class="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm">
+                <span class="text-xs text-gray-500 mt-1 block">
+                    Jika diisi nominal &ge; Rp 10.000, rekening langsung Aktif dan sistem langsung membuat Password &amp; PIN. Jika dibiarkan 0, status nasabah adalah "Belum Aktivasi" dan setoran dilakukan di loket Teller.
+                </span>
+            </div>
+        @endif
+
         <div class="bg-amber-50 border border-amber-200 p-3.5 rounded-lg mb-6 text-xs text-amber-800">
-            <strong>Catatan Alur Pendaftaran:</strong><br>
-            Nasabah baru didaftarkan dengan status belum aktivasi dan saldo Rp0. Aktivasi resmi, penerimaan setoran awal tunai (minimal Rp10.000), serta pencetakan kredensial awal (Password &amp; PIN) dilakukan di loket Teller saat siswa hadir.
+            <strong>Catatan Fleksibilitas Pendaftaran:</strong><br>
+            Anda dapat mendaftarkan nasabah langsung aktif dengan mengisi Setoran Awal (min. Rp 10.000), atau mendaftarkannya terlebih dahulu (saldo Rp0) agar setoran fisik diserahkan langsung oleh siswa ke Teller.
         </div>
 
         <button type="submit" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 px-6 rounded-lg w-full text-sm shadow transition">

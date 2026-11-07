@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\Accounting_Journal;
 use App\Models\Customer;
+use App\Models\Transaction;
 use App\Models\User;
 use App\Services\CustomerOnboarding;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AdminController extends Controller
@@ -21,7 +23,7 @@ class AdminController extends Controller
 
     public function nasabah(Request $request)
     {
-        $query = Customer::withTrashed();
+        $query = Customer::query();
         if ($request->search) {
             $query->where('student_name', 'like', "%{$request->search}%")
                 ->orWhere('student_id', 'like', "%{$request->search}%")
@@ -193,7 +195,7 @@ class AdminController extends Controller
                 'regex:/^(X|XI|XII)\s+(AKL|LPS|MP|BR|BD|TKJ|DKV|RPL|AK|MPLB|BDP)\s+[0-9]+$/i',
             ],
             'jurusan' => 'nullable|string',
-            'initial_deposit' => 'nullable|integer|in:0',
+            'initial_deposit' => 'nullable|integer|min:0|max:100000000',
         ], [
             'student_id.required' => 'NIS Siswa wajib diisi.',
             'student_id.regex' => 'NIS harus berupa deret angka (4 - 12 digit), tidak boleh huruf atau acak.',
@@ -203,16 +205,62 @@ class AdminController extends Controller
             'student_name.regex' => 'Nama siswa hanya boleh berisi huruf dan tanda baca resmi nama.',
             'class.required' => 'Kelas siswa wajib diisi.',
             'class.regex' => 'Format kelas harus valid, contoh: X RPL 1, XI AKL 2, atau XII MPLB 1.',
-            'initial_deposit.in' => 'Setoran awal dicatat teller saat aktivasi, bukan saat pendaftaran.',
+            'initial_deposit.min' => 'Setoran awal tidak boleh bernilai negatif.',
         ]);
 
-        app(CustomerOnboarding::class)->register(
+        $initialDeposit = (int) ($data['initial_deposit'] ?? 0);
+        if ($initialDeposit > 0 && $initialDeposit < 10000) {
+            throw ValidationException::withMessages([
+                'initial_deposit' => 'Jika rekening langsung diaktifkan dengan setoran awal, nominal minimal adalah Rp 10.000.',
+            ]);
+        }
+
+        $customer = app(CustomerOnboarding::class)->register(
             trim($data['student_id']),
             trim($data['student_name']),
             strtoupper(trim($data['class']))
         );
 
-        return redirect()->route('admin.nasabah')->with('success', 'Data nasabah berhasil didaftarkan dengan status Nonaktif (saldo Rp0). Kredensial dan setoran awal akan diproses saat aktivasi.');
+        if ($initialDeposit >= 10000) {
+            $newPass = substr(str_shuffle('abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'), 0, 8);
+            $newPin = (string) random_int(100000, 999999);
+
+            $customer->status = 'Aktif';
+            $customer->balance = $initialDeposit;
+            $customer->password = Hash::make($newPass);
+            $customer->pin = Hash::make($newPin);
+            $customer->save();
+
+            $transaction = Transaction::create([
+                'transaction_code' => 'DEP-'.Str::ulid(),
+                'customer_id' => $customer->id,
+                'user_id' => auth()->id(),
+                'transaction_date' => now(),
+                'transaction_type' => 'Setoran',
+                'amount' => $initialDeposit,
+                'description' => 'Setoran awal saat pendaftaran nasabah oleh Administrator',
+                'status' => 'success',
+            ]);
+
+            Accounting_Journal::create([
+                'transaction_id' => $transaction->id,
+                'account_code' => '111',
+                'position' => 'Debet',
+                'amount' => $initialDeposit,
+            ]);
+
+            Accounting_Journal::create([
+                'transaction_id' => $transaction->id,
+                'account_code' => '211',
+                'position' => 'Kredit',
+                'amount' => $initialDeposit,
+            ]);
+
+            $depositFmt = number_format($initialDeposit, 0, ',', '.');
+            return redirect()->route('admin.nasabah')->with('success', "Nasabah {$customer->student_name} (NIS: {$customer->student_id} | Rek: {$customer->account_number}) BERHASIL DIDAFTARKAN & AKTIF! Saldo Awal: Rp {$depositFmt} | Password: {$newPass} | PIN: {$newPin}");
+        }
+
+        return redirect()->route('admin.nasabah')->with('success', "Nasabah {$customer->student_name} (NIS: {$customer->student_id} | Rek: {$customer->account_number}) berhasil didaftarkan (Status: Belum Aktivasi). Aktivasi dan setoran awal dapat dilakukan di loket Teller.");
     }
 
     public function editNasabah($id)
@@ -260,9 +308,14 @@ class AdminController extends Controller
     public function statusNasabah($id)
     {
         $credentials = null;
+        $error = null;
 
-        DB::transaction(function () use ($id, &$credentials): void {
-            $customer = Customer::whereKey($id)->lockForUpdate()->firstOrFail();
+        DB::transaction(function () use ($id, &$credentials, &$error): void {
+            $customer = Customer::whereKey($id)->lockForUpdate()->first();
+            if (! $customer) {
+                $error = 'Data nasabah tidak ditemukan atau sudah dihapus.';
+                return;
+            }
 
             if ($customer->status === Customer::STATUS_PENDING) {
                 // Admin mengaktifkan nasabah dengan setoran awal resmi minimal Rp 10.000
@@ -317,6 +370,10 @@ class AdminController extends Controller
             $customer->save();
             $customer->tokens()->delete();
         });
+
+        if ($error) {
+            return redirect()->route('admin.nasabah')->with('error', $error);
+        }
 
         if ($credentials) {
             return redirect()->route('admin.nasabah')->with('success', "Aktivasi Berhasil! Nasabah {$credentials['name']} (NIS: {$credentials['nis']}) aktif dengan Saldo Awal Rp {$credentials['deposit']}. Password: {$credentials['pass']} | PIN: {$credentials['pin']}");

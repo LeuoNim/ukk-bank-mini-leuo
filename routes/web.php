@@ -71,7 +71,7 @@ Route::middleware(['auth', 'role:Administrator'])->prefix('admin')->group(functi
     Route::get('/nasabah/{id}/edit', [AdminController::class, 'editNasabah'])->name('admin.nasabah.edit');
     Route::put('/nasabah/{id}', [AdminController::class, 'updateNasabah'])->name('admin.nasabah.update');
     Route::patch('/nasabah/{id}/status', [AdminController::class, 'statusNasabah'])->name('admin.nasabah.status');
-    Route::patch('/nasabah/{customer}/pending', [CustomerLifecycleController::class, 'markPending'])->name('admin.nasabah.pending');
+    Route::patch('/nasabah/{id}/pending', [CustomerLifecycleController::class, 'markPending'])->name('admin.nasabah.pending');
     Route::get('/nasabah/{id}/qr', [AdminController::class, 'cetakQrNasabah'])->name('admin.nasabah.qr');
     Route::get('/petugas', [AdminController::class, 'petugas'])->name('admin.petugas');
     Route::get('/petugas/tambah', [AdminController::class, 'tambahPetugas'])->name('admin.petugas.tambah');

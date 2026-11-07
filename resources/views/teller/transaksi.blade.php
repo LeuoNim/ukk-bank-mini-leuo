@@ -138,6 +138,10 @@
                         </tr>
                     </table>
                 </div>
+
+                @if($customer->status === 'Aktif')
+                    @include('teller.recover_credentials')
+                @endif
             @elseif(request('search'))
                 <div class="text-red-500 text-sm p-4 bg-red-50 rounded-lg border border-red-200">Data nasabah tidak ditemukan.</div>
             @endif
