@@ -178,18 +178,20 @@ class CustomerController extends Controller
         $prefix = 'BM';
 
         if (str_contains($upperClass, 'AKL') || str_contains($upperClass, 'AK')) {
-            $prefix = 'AK';
+            $prefix = 'AKL';
+        } elseif (str_contains($upperClass, 'LPS') || str_contains($upperClass, 'PS')) {
+            $prefix = 'LPS';
         } elseif (str_contains($upperClass, 'RPL')) {
             $prefix = 'RPL';
         } elseif (str_contains($upperClass, 'TKJ')) {
             $prefix = 'TKJ';
         } elseif (str_contains($upperClass, 'DKV')) {
             $prefix = 'DKV';
-        } elseif (str_contains($upperClass, 'OTKP') || str_contains($upperClass, 'MP')) {
+        } elseif (str_contains($upperClass, 'OTKP') || str_contains($upperClass, 'MPLB') || str_contains($upperClass, 'MP')) {
             $prefix = 'MP';
-        } elseif (str_contains($upperClass, 'BDP') || str_contains($upperClass, 'BR')) {
+        } elseif (str_contains($upperClass, 'BDP') || str_contains($upperClass, 'RITEL') || str_contains($upperClass, 'BR')) {
             $prefix = 'BR';
-        } elseif (str_contains($upperClass, 'BD')) {
+        } elseif (str_contains($upperClass, 'DIGITAL') || str_contains($upperClass, 'BD')) {
             $prefix = 'BD';
         }
 

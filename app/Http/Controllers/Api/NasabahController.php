@@ -87,8 +87,11 @@ class NasabahController extends Controller
 
         return DB::transaction(function () use ($request) {
             $customer = Customer::whereKey($request->user()->id)->lockForUpdate()->firstOrFail();
-            if ($customer->status !== 'Aktif' || ! Hash::check($request->pin, $customer->pin)) {
-                return response()->json(['success' => false, 'message' => 'PIN salah atau rekening tidak aktif.'], 403);
+            if ($customer->status !== 'Aktif') {
+                return response()->json(['success' => false, 'message' => 'Rekening nasabah tidak aktif atau diblokir.'], 403);
+            }
+            if (! Hash::check($request->pin, $customer->pin)) {
+                return response()->json(['success' => false, 'message' => 'PIN transaksi yang Anda masukkan salah.'], 403);
             }
             $trx = Transaction::whereKey($request->transaction_id)->where('customer_id', $customer->id)
                 ->where('status', 'pending')->lockForUpdate()->first();

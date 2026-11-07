@@ -86,10 +86,13 @@ class TransactionController extends Controller
 
                 return response()->json(['success' => false, 'message' => 'Rekening belum aktif atau diblokir. Setoran ditolak.'], 403);
             }
-            if ($customer->balance + $modifier < 0) {
+            if (($customer->balance + $modifier) < 10000) {
                 DB::rollBack();
 
-                return response()->json(['success' => false, 'message' => 'Koreksi tidak boleh membuat saldo negatif.'], 422);
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Setoran ditolak: Saldo akhir rekening tabungan harus memenuhi batas minimum Rp 10.000 (Saldo saat ini: Rp '.number_format($customer->balance, 0, ',', '.').').',
+                ], 422);
             }
             $transaction = Transaction::create([
                 'transaction_code' => $this->generateTransactionCode($type),

@@ -190,7 +190,7 @@ class AdminController extends Controller
                 'string',
                 'min:3',
                 'max:50',
-                'regex:/^(X|XI|XII)\s+(RPL|AKL|AK|MPLB|MP|BD|BR|BDP|DKV|TKJ)\s+[0-9]+$/i',
+                'regex:/^(X|XI|XII)\s+(AKL|LPS|MP|BR|BD|TKJ|DKV|RPL|AK|MPLB|BDP)\s+[0-9]+$/i',
             ],
             'jurusan' => 'nullable|string',
             'initial_deposit' => 'nullable|integer|in:0',
@@ -244,7 +244,7 @@ class AdminController extends Controller
                 'string',
                 'min:3',
                 'max:50',
-                'regex:/^(X|XI|XII)\s+(RPL|AKL|AK|MPLB|MP|BD|BR|BDP|DKV|TKJ)\s+[0-9]+$/i',
+                'regex:/^(X|XI|XII)\s+(AKL|LPS|MP|BR|BD|TKJ|DKV|RPL|AK|MPLB|BDP)\s+[0-9]+$/i',
             ],
             'jurusan' => 'nullable|string',
             'pin' => 'prohibited',
@@ -266,28 +266,13 @@ class AdminController extends Controller
 
     public function statusNasabah($id)
     {
-        $credentials = null;
+        $message = 'Status nasabah berhasil diperbarui.';
 
-        DB::transaction(function () use ($id, &$credentials): void {
+        DB::transaction(function () use ($id, &$message): void {
             $customer = Customer::whereKey($id)->lockForUpdate()->firstOrFail();
             if ($customer->status === Customer::STATUS_PENDING) {
-                // Administrator dapat mengaktifkan langsung untuk demo penguji dengan kredensial acak unik
-                $newPass = substr(str_shuffle('abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'), 0, 8);
-                $newPin = (string) random_int(100000, 999999);
-
-                $customer->status = 'Aktif';
-                $customer->password = Hash::make($newPass);
-                $customer->pin = Hash::make($newPin);
-                $customer->save();
-
-                $credentials = [
-                    'name' => $customer->student_name,
-                    'nis' => $customer->student_id,
-                    'pass' => $newPass,
-                    'pin' => $newPin,
-                ];
-
-                \Illuminate\Support\Facades\Log::info("Admin mengaktifkan nasabah {$customer->student_id} secara langsung.");
+                // Rekening belum aktivasi wajib melalui loket Teller dengan setoran awal tunai
+                $message = "Nasabah {$customer->student_name} berstatus belum aktivasi. Aktivasi resmi wajib dilakukan di loket Teller dengan setoran awal minimal Rp 10.000.";
                 return;
             }
             $customer->status = $customer->status === 'Aktif' ? 'NonAktif' : 'Aktif';
@@ -295,11 +280,7 @@ class AdminController extends Controller
             $customer->tokens()->delete();
         });
 
-        if ($credentials) {
-            return redirect()->route('admin.nasabah')->with('success', "Nasabah {$credentials['name']} (NIS: {$credentials['nis']}) berhasil diaktifkan! Password: {$credentials['pass']} | PIN: {$credentials['pin']}");
-        }
-
-        return redirect()->route('admin.nasabah')->with('success', 'Status nasabah berhasil diperbarui.');
+        return redirect()->route('admin.nasabah')->with('success', $message);
     }
 
     public function cetakQrNasabah($id)

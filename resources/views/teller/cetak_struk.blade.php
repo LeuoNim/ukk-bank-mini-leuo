@@ -6,10 +6,26 @@
     <title>Struk Transaksi {{ $transaction->transaction_code }}</title>
     @vite('resources/css/app.css')
     <style>
+        @page {
+            size: auto;
+            margin: 0mm; /* Menghilangkan URL localhost dan tanggal otomatis dari header/footer browser */
+        }
         @media print {
-            body { font-size: 12pt; }
+            body { 
+                background: #ffffff !important;
+                font-size: 11pt; 
+                margin: 10mm;
+                padding: 0 !important;
+            }
             .no-print { display: none !important; }
-            .print-area { width: 100%; max-width: 100%; border: none !important; box-shadow: none !important; margin: 0; padding: 0; }
+            .print-area { 
+                width: 100%; 
+                max-width: 100%; 
+                border: none !important; 
+                box-shadow: none !important; 
+                margin: 0; 
+                padding: 10px; 
+            }
         }
     </style>
 </head>
@@ -45,7 +61,7 @@
                 </tr>
                 <tr>
                     <td class="py-1 text-gray-600">Jenis Transaksi</td>
-                    <td class="py-1 font-bold {{ in_array($transaction->transaction_type, ['Setoran', 'Setoran Koreksi']) ? 'text-green-700' : 'text-red-700' }}">
+                    <td class="py-1 font-bold {{ $transaction->transaction_type === 'Setoran' ? 'text-green-700' : 'text-red-700' }}">
                         {{ strtoupper($transaction->transaction_type) }}
                     </td>
                 </tr>
@@ -85,7 +101,7 @@
         <!-- Nominal -->
         <div class="text-center my-6">
             <p class="text-gray-600 text-sm mb-1 uppercase font-semibold">Nominal {{ $transaction->transaction_type }}</p>
-            <p class="text-3xl font-bold {{ in_array($transaction->transaction_type, ['Setoran', 'Setoran Koreksi']) ? 'text-green-700' : 'text-red-700' }}">
+            <p class="text-3xl font-bold {{ $transaction->transaction_type === 'Setoran' ? 'text-green-700' : 'text-red-700' }}">
                 Rp {{ number_format($transaction->amount, 0, ',', '.') }}
             </p>
         </div>

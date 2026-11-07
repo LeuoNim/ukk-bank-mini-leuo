@@ -61,20 +61,22 @@
                 <select name="jurusan" id="jurusan_select"
                     class="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm bg-gray-50">
                     <option value="">-- Pilih / Terisi Otomatis --</option>
-                    <option value="RPL">Rekayasa Perangkat Lunak (RPL)</option>
                     <option value="AKL">Akuntansi dan Keuangan Lembaga (AKL)</option>
-                    <option value="MPLB">Manajemen Perkantoran dan Layanan Bisnis (MPLB)</option>
+                    <option value="LPS">Layanan Perbankan Syariah (LPS)</option>
+                    <option value="MP">Manajemen Perkantoran (MP)</option>
+                    <option value="BR">Bisnis Ritel (BR)</option>
                     <option value="BD">Bisnis Digital (BD)</option>
-                    <option value="DKV">Desain Komunikasi Visual (DKV)</option>
                     <option value="TKJ">Teknik Komputer dan Jaringan (TKJ)</option>
+                    <option value="DKV">Desain Komunikasi Visual (DKV)</option>
+                    <option value="RPL">Rekayasa Perangkat Lunak (RPL)</option>
                 </select>
                 <span class="text-xs text-gray-500 mt-1 block">Otomatis terpilih saat kelas diketik.</span>
             </div>
         </div>
 
         <div class="bg-amber-50 border border-amber-200 p-3.5 rounded-lg mb-6 text-xs text-amber-800">
-            <strong>Catatan Keamanan Pendaftaran:</strong><br>
-            Nasabah baru disimpan dengan saldo Rp0. Aktivasi resmi, setoran awal tabungan, dan penyerahan kredensial awal (Password &amp; PIN) dilakukan di loket Teller saat siswa hadir, atau diaktifkan langsung oleh Administrator pada menu Kelola Nasabah.
+            <strong>Catatan Alur Pendaftaran:</strong><br>
+            Nasabah baru didaftarkan dengan status belum aktivasi dan saldo Rp0. Aktivasi resmi, penerimaan setoran awal tunai (minimal Rp10.000), serta pencetakan kredensial awal (Password &amp; PIN) dilakukan di loket Teller saat siswa hadir.
         </div>
 
         <button type="submit" class="bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 px-6 rounded-lg w-full text-sm shadow transition">
@@ -90,12 +92,14 @@
 
         function detectJurusan(className) {
             const upper = className.toUpperCase();
-            if (upper.includes('RPL')) return 'RPL';
             if (upper.includes('AKL') || upper.includes('AK')) return 'AKL';
-            if (upper.includes('MPLB') || upper.includes('MP') || upper.includes('OTKP')) return 'MPLB';
-            if (upper.includes('DKV')) return 'DKV';
+            if (upper.includes('LPS') || upper.includes('PS')) return 'LPS';
+            if (upper.includes('MPLB') || upper.includes('MP') || upper.includes('OTKP')) return 'MP';
+            if (upper.includes('BR') || upper.includes('RITEL') || upper.includes('BDP')) return 'BR';
+            if (upper.includes('BD') || upper.includes('DIGITAL')) return 'BD';
             if (upper.includes('TKJ')) return 'TKJ';
-            if (upper.includes('BD') || upper.includes('BDP') || upper.includes('BR')) return 'BD';
+            if (upper.includes('DKV')) return 'DKV';
+            if (upper.includes('RPL')) return 'RPL';
             return '';
         }
 

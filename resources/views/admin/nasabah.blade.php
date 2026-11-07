@@ -75,11 +75,7 @@
                                     class="text-amber-600 hover:text-amber-800 text-sm font-bold mr-2">Edit</a>
 
                                 @if($c->status === \App\Models\Customer::STATUS_PENDING)
-                                    <form action="{{ route('admin.nasabah.status', $c->id) }}" method="POST" class="inline mr-2">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" onclick="return confirm('Aktifkan rekening nasabah ini secara langsung? Password login akan diset ke NIS dan PIN ke 123456.')" class="text-green-600 hover:text-green-800 text-sm font-bold">Aktifkan Langsung</button>
-                                    </form>
+                                    <span class="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded font-medium inline-block">Aktivasi di Teller</span>
                                 @elseif($c->status === 'Aktif')
                                     <form action="{{ route('admin.nasabah.status', $c->id) }}" method="POST" class="inline mr-2">
                                         @csrf
