@@ -95,5 +95,11 @@
             </tbody>
         </table>
     </div>
+
+    @if($journals->hasPages())
+        <div class="mt-4 pt-4 border-t border-gray-100">
+            {{ $journals->links() }}
+        </div>
+    @endif
 </div>
 @endsection

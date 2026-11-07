@@ -59,7 +59,8 @@ class TellerController extends Controller
     public function riwayat(Request $request)
     {
         $query = Transaction::with('customer')
-            ->where('user_id', auth()->id());
+            ->where('user_id', auth()->id())
+            ->where('status', 'success');
 
         if ($request->date) {
             $query->whereDate('transaction_date', $request->date);
@@ -74,6 +75,31 @@ class TellerController extends Controller
         $transactions = $query->orderBy('id', 'desc')->paginate(15)->withQueryString();
 
         return view('teller.riwayat', compact('transactions'));
+    }
+
+    public function checkPendingStatus($id)
+    {
+        $trx = Transaction::with('customer')
+            ->where('id', $id)
+            ->where('user_id', auth()->id())
+            ->first();
+
+        if (! $trx) {
+            return response()->json(['success' => false, 'message' => 'Transaksi tidak ditemukan.'], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'status' => $trx->status,
+            'amount' => $trx->amount,
+            'formatted_amount' => 'Rp ' . number_format($trx->amount, 0, ',', '.'),
+            'cetak_url' => route('teller.cetak', $trx->id),
+            'message' => match ($trx->status) {
+                'success' => 'Penarikan berhasil diotorisasi oleh nasabah!',
+                'cancelled' => 'Permintaan penarikan telah dibatalkan.',
+                default => 'Menunggu nasabah memasukkan PIN di aplikasi mobile...',
+            },
+        ]);
     }
 
     public function laporan()

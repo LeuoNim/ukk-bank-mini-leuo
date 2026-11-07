@@ -154,31 +154,33 @@
             @elseif(isset($customer))
                 @if(isset($pendingWithdrawal))
                     <!-- Notifikasi Status Penarikan Pending -->
-                    <div class="bg-blue-50 border border-blue-200 text-blue-900 p-4 rounded-lg mb-5">
-                        <div class="flex items-start justify-between gap-3">
-                            <div>
-                                <span
+                    <div id="pendingWithdrawalBanner" class="bg-blue-50 border border-blue-200 text-blue-900 p-4 rounded-lg mb-5 shadow-sm transition-all duration-300">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                            <div class="flex-1">
+                                <span id="pendingBadge"
                                     class="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-blue-100 text-blue-800 mb-1">
+                                    <span class="w-2 h-2 rounded-full bg-blue-500 animate-ping mr-1.5"></span>
                                     Menunggu Otorisasi Nasabah
                                 </span>
-                                <p class="text-sm font-semibold">Penarikan Rp
+                                <p class="text-sm font-bold text-gray-900" id="pendingAmountText">Penarikan Rp
                                     {{ number_format($pendingWithdrawal->amount, 0, ',', '.') }}
                                 </p>
-                                <p class="text-xs text-blue-700 mt-1">
-                                    Permintaan penarikan telah dikirim. Nasabah harus memasukkan PIN Transaksi pada aplikasi
-                                    mobile untuk menyelesaikan transaksi ini.
+                                <p class="text-xs text-blue-700 mt-1" id="pendingNoticeText">
+                                    Permintaan penarikan telah dikirim ke HP nasabah. Nasabah memasukkan PIN di aplikasi mobile untuk menyelesaikan transaksi ini.
                                 </p>
+                                <div id="statusCheckFeedback" class="hidden text-xs mt-1 font-medium"></div>
                             </div>
-                            <div class="flex items-center gap-2">
-                                <a href="{{ route('teller.transaksi') }}"
-                                    class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-1.5 px-3 rounded shadow transition">
-                                    Periksa Status
-                                </a>
+                            <div class="flex items-center gap-2" id="pendingActionButtons">
+                                <button type="button" id="btnCheckStatus" onclick="checkPendingManual()"
+                                    class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold py-2 px-3 rounded shadow transition flex items-center gap-1.5">
+                                    <svg id="checkSpinner" class="hidden animate-spin h-3.5 w-3.5 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                                    <span id="checkBtnLabel">Periksa Status</span>
+                                </button>
                                 <form action="{{ route('teller.withdraw.cancel', $pendingWithdrawal->id) }}" method="POST"
                                     onsubmit="return confirm('Batalkan permintaan penarikan ini?')">
                                     @csrf
                                     <button type="submit"
-                                        class="bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 text-xs font-medium py-1.5 px-3 rounded transition">
+                                        class="bg-white hover:bg-gray-100 text-gray-700 border border-gray-300 text-xs font-medium py-2 px-3 rounded transition">
                                         Batalkan
                                     </button>
                                 </form>
@@ -196,34 +198,18 @@
                         <div class="flex flex-wrap gap-3">
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input type="radio" name="jenis" value="setoran" checked
-                                    onclick="toggleFields(false, false, '{{ route('teller.deposit') }}')">
+                                    onclick="toggleFields(false, '{{ route('teller.deposit') }}')">
                                 <span
-                                    class="px-3.5 py-1.5 bg-green-50 text-green-700 border border-green-200 rounded text-sm font-medium hover:bg-green-100">Setoran</span>
+                                    class="px-4 py-2 bg-green-50 text-green-700 border border-green-300 font-semibold rounded text-sm hover:bg-green-100">Setoran</span>
                             </label>
                             <label class="flex items-center gap-2 cursor-pointer">
                                 <input type="radio" name="jenis" value="penarikan"
-                                    onclick="toggleFields(true, false, '{{ route('teller.withdraw') }}')">
+                                    onclick="toggleFields(true, '{{ route('teller.withdraw') }}')">
                                 <span
-                                    class="px-3.5 py-1.5 bg-red-50 text-red-700 border border-red-200 rounded text-sm font-medium hover:bg-red-100">Penarikan</span>
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="radio" name="jenis" value="setoran_koreksi"
-                                    onclick="toggleFields(false, true, '{{ route('teller.deposit') }}')">
-                                <span
-                                    class="px-3.5 py-1.5 bg-amber-50 text-amber-700 border border-amber-200 rounded text-sm font-medium hover:bg-amber-100">Setoran
-                                    Koreksi</span>
-                            </label>
-                            <label class="flex items-center gap-2 cursor-pointer">
-                                <input type="radio" name="jenis" value="penarikan_koreksi"
-                                    onclick="toggleFields(false, true, '{{ route('teller.withdraw') }}')">
-                                <span
-                                    class="px-3.5 py-1.5 bg-orange-50 text-orange-700 border border-orange-200 rounded text-sm font-medium hover:bg-orange-100">Penarikan
-                                    Koreksi</span>
+                                    class="px-4 py-2 bg-red-50 text-red-700 border border-red-300 font-semibold rounded text-sm hover:bg-red-100">Penarikan</span>
                             </label>
                         </div>
                     </div>
-
-                    <input type="hidden" name="is_koreksi" id="is_koreksi" value="0">
 
                     <div class="mb-4">
                         <label class="block text-sm font-bold text-gray-700 mb-2">Nominal (Rp)</label>
@@ -248,13 +234,7 @@
                         </p>
                     </div>
 
-                    <div class="mb-4" id="koreksiGroup" style="display: none;">
-                        <label class="block text-sm font-bold text-gray-700 mb-2">Kode Sandi Koreksi</label>
-                        <input type="password" name="sandi_koreksi"
-                            class="w-full px-4 py-2 border rounded focus:outline-none focus:border-amber-500 text-sm">
-                        <p class="text-xs text-gray-500 mt-1">Masukkan kode sandi Supervisor untuk otorisasi
-                            transaksi koreksi.</p>
-                    </div>
+
 
                     <button type="submit" @if(isset($pendingWithdrawal)) disabled
                     class="w-full bg-gray-400 text-white font-bold py-3 px-4 rounded cursor-not-allowed text-sm" @else
@@ -279,15 +259,11 @@
     <!-- HTML5-QRCode Library (Local & Offline Ready) -->
     <script src="{{ asset('html5-qrcode.min.js') }}"></script>
     <script>
-        function toggleFields(isWithdraw, isKoreksi, actionUrl) {
+        function toggleFields(isWithdraw, actionUrl) {
             const mobileNoticeGroup = document.getElementById('mobileNoticeGroup');
-            const koreksiGroup = document.getElementById('koreksiGroup');
-            const isKoreksiInput = document.getElementById('is_koreksi');
             const formTransaksi = document.getElementById('formTransaksi');
 
-            if (mobileNoticeGroup) mobileNoticeGroup.style.display = (isWithdraw && !isKoreksi) ? 'block' : 'none';
-            if (koreksiGroup) koreksiGroup.style.display = isKoreksi ? 'block' : 'none';
-            if (isKoreksiInput) isKoreksiInput.value = isKoreksi ? '1' : '0';
+            if (mobileNoticeGroup) mobileNoticeGroup.style.display = isWithdraw ? 'block' : 'none';
             if (formTransaksi) formTransaksi.action = actionUrl;
         }
 
@@ -298,6 +274,89 @@
                     if (form) form.submit();
                 }
             });
+
+            // Realtime Auto-Polling Status Pending Withdrawal
+            @if(isset($pendingWithdrawal))
+            const pendingTrxId = {{ $pendingWithdrawal->id }};
+            const statusUrl = "{{ route('teller.withdraw.status', $pendingWithdrawal->id) }}";
+            let pollInterval = null;
+
+            function checkPendingStatusAjax(isManual = false) {
+                const btn = document.getElementById('btnCheckStatus');
+                const spinner = document.getElementById('checkSpinner');
+                const btnLabel = document.getElementById('checkBtnLabel');
+                const feedback = document.getElementById('statusCheckFeedback');
+
+                if (isManual && btn) {
+                    btn.disabled = true;
+                    if (spinner) spinner.classList.remove('hidden');
+                    if (btnLabel) btnLabel.textContent = 'Memeriksa...';
+                }
+
+                fetch(statusUrl, {
+                    headers: { 'Accept': 'application/json' }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        if (pollInterval) clearInterval(pollInterval);
+                        const banner = document.getElementById('pendingWithdrawalBanner');
+                        if (banner) {
+                            banner.className = 'bg-emerald-50 border border-emerald-300 text-emerald-900 p-5 rounded-lg mb-5 shadow';
+                            banner.innerHTML = `
+                                <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                                    <div>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-emerald-100 text-emerald-800 mb-1">
+                                            ✓ Penarikan Berhasil Diotorisasi
+                                        </span>
+                                        <p class="text-base font-bold text-emerald-950">Penarikan Tunai Rp ${data.formatted_amount} Sukses!</p>
+                                        <p class="text-xs text-emerald-700 mt-0.5">PIN nasabah valid. Transaksi telah dibukukan ke sistem & kas.</p>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <a href="${data.cetak_url}" target="_blank" class="bg-amber-500 hover:bg-amber-600 text-white font-bold text-xs py-2 px-3.5 rounded shadow flex items-center gap-1.5 transition">
+                                            🖨 Cetak Struk
+                                        </a>
+                                        <a href="{{ route('teller.transaksi') }}" class="bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold py-2 px-3 rounded shadow transition">
+                                            Transaksi Baru
+                                        </a>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    } else if (data.status === 'cancelled') {
+                        if (pollInterval) clearInterval(pollInterval);
+                        alert("Permintaan penarikan telah dibatalkan.");
+                        window.location.href = "{{ route('teller.transaksi') }}";
+                    } else {
+                        if (isManual && feedback) {
+                            feedback.classList.remove('hidden');
+                            feedback.className = 'text-xs mt-1.5 font-medium text-amber-700';
+                            feedback.textContent = 'Status: Masih menunggu nasabah memasukkan PIN di aplikasi HP...';
+                            setTimeout(() => { feedback.classList.add('hidden'); }, 4000);
+                        }
+                    }
+                })
+                .catch(err => {
+                    console.error("Gagal memeriksa status penarikan:", err);
+                })
+                .finally(() => {
+                    if (isManual && btn) {
+                        btn.disabled = false;
+                        if (spinner) spinner.classList.add('hidden');
+                        if (btnLabel) btnLabel.textContent = 'Periksa Status';
+                    }
+                });
+            }
+
+            window.checkPendingManual = function() {
+                checkPendingStatusAjax(true);
+            };
+
+            // Jalankan polling otomatis setiap 2.5 detik
+            pollInterval = setInterval(() => {
+                checkPendingStatusAjax(false);
+            }, 2500);
+            @endif
 
             // Scanner Logic
             const scanBtn = document.getElementById('scanQrBtn');

@@ -23,8 +23,6 @@
                 <option value="">Semua Transaksi</option>
                 <option value="Setoran" {{ request('type') == 'Setoran' ? 'selected' : '' }}>Setoran</option>
                 <option value="Penarikan" {{ request('type') == 'Penarikan' ? 'selected' : '' }}>Penarikan</option>
-                <option value="Setoran Koreksi" {{ request('type') == 'Setoran Koreksi' ? 'selected' : '' }}>Setoran Koreksi</option>
-                <option value="Penarikan Koreksi" {{ request('type') == 'Penarikan Koreksi' ? 'selected' : '' }}>Penarikan Koreksi</option>
             </select>
         </div>
         <div>

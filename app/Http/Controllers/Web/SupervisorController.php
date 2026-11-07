@@ -26,7 +26,7 @@ class SupervisorController extends Controller
     {
         $reports = DailyReport::with(['teller', 'supervisor'])
             ->orderBy('report_date', 'desc')
-            ->get();
+            ->paginate(15)->withQueryString();
 
         return view('supervisor.approval', compact('reports'));
     }
@@ -138,18 +138,18 @@ class SupervisorController extends Controller
                 $endDate.' 23:59:59',
             ]);
 
-        $transactions = $query->orderBy('transaction_date', 'desc')->get();
+        $allTransactions = (clone $query)->get();
 
-        $total_deposit = $transactions->whereIn('transaction_type', ['Setoran', 'Setoran Koreksi'])->sum('amount');
-        $total_withdrawal = $transactions->whereIn('transaction_type', ['Penarikan', 'Penarikan Koreksi'])->sum('amount');
+        $total_deposit = $allTransactions->where('transaction_type', 'Setoran')->sum('amount');
+        $total_withdrawal = $allTransactions->where('transaction_type', 'Penarikan')->sum('amount');
         $net_cash = $total_deposit - $total_withdrawal;
 
         // Rekap ringkasan per tanggal dalam minggu tersebut
-        $dailySummary = $transactions->groupBy(function ($item) {
+        $dailySummary = $allTransactions->groupBy(function ($item) {
             return Carbon::parse($item->transaction_date)->format('Y-m-d');
         })->map(function ($group) {
-            $deposit = $group->whereIn('transaction_type', ['Setoran', 'Setoran Koreksi'])->sum('amount');
-            $withdrawal = $group->whereIn('transaction_type', ['Penarikan', 'Penarikan Koreksi'])->sum('amount');
+            $deposit = $group->where('transaction_type', 'Setoran')->sum('amount');
+            $withdrawal = $group->where('transaction_type', 'Penarikan')->sum('amount');
 
             return [
                 'count' => $group->count(),
@@ -158,6 +158,8 @@ class SupervisorController extends Controller
                 'net' => $deposit - $withdrawal,
             ];
         });
+
+        $transactions = $query->orderBy('transaction_date', 'desc')->paginate(15)->withQueryString();
 
         return view('supervisor.laporan_mingguan', compact(
             'transactions',
@@ -184,18 +186,18 @@ class SupervisorController extends Controller
             ->whereYear('transaction_date', $year)
             ->whereMonth('transaction_date', $month);
 
-        $transactions = $query->orderBy('transaction_date', 'desc')->get();
+        $allTransactions = (clone $query)->get();
 
-        $total_deposit = $transactions->whereIn('transaction_type', ['Setoran', 'Setoran Koreksi'])->sum('amount');
-        $total_withdrawal = $transactions->whereIn('transaction_type', ['Penarikan', 'Penarikan Koreksi'])->sum('amount');
+        $total_deposit = $allTransactions->where('transaction_type', 'Setoran')->sum('amount');
+        $total_withdrawal = $allTransactions->where('transaction_type', 'Penarikan')->sum('amount');
         $net_cash = $total_deposit - $total_withdrawal;
 
         // Rekap ringkasan per tanggal dalam bulan tersebut
-        $dailySummary = $transactions->groupBy(function ($item) {
+        $dailySummary = $allTransactions->groupBy(function ($item) {
             return Carbon::parse($item->transaction_date)->format('Y-m-d');
         })->map(function ($group) {
-            $deposit = $group->whereIn('transaction_type', ['Setoran', 'Setoran Koreksi'])->sum('amount');
-            $withdrawal = $group->whereIn('transaction_type', ['Penarikan', 'Penarikan Koreksi'])->sum('amount');
+            $deposit = $group->where('transaction_type', 'Setoran')->sum('amount');
+            $withdrawal = $group->where('transaction_type', 'Penarikan')->sum('amount');
 
             return [
                 'count' => $group->count(),
@@ -204,6 +206,8 @@ class SupervisorController extends Controller
                 'net' => $deposit - $withdrawal,
             ];
         });
+
+        $transactions = $query->orderBy('transaction_date', 'desc')->paginate(15)->withQueryString();
 
         return view('supervisor.laporan_bulanan', compact('transactions', 'month', 'year', 'total_deposit', 'total_withdrawal', 'net_cash', 'dailySummary'));
     }
@@ -224,10 +228,10 @@ class SupervisorController extends Controller
             });
         }
 
-        $journals = $query->orderBy('id', 'desc')->get();
+        $total_debet = (clone $query)->where('position', 'Debet')->sum('amount');
+        $total_kredit = (clone $query)->where('position', 'Kredit')->sum('amount');
 
-        $total_debet = $journals->where('position', 'Debet')->sum('amount');
-        $total_kredit = $journals->where('position', 'Kredit')->sum('amount');
+        $journals = $query->orderBy('id', 'desc')->paginate(15)->withQueryString();
 
         $tellers = User::where('role', 'Teller')->get();
 

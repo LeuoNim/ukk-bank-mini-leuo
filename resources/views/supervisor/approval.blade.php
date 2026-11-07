@@ -81,6 +81,12 @@
             </tbody>
         </table>
     </div>
+
+    @if($reports->hasPages())
+        <div class="mt-4 pt-4 border-t border-gray-100">
+            {{ $reports->links() }}
+        </div>
+    @endif
 </div>
 
 <!-- Modal Tolak Laporan -->

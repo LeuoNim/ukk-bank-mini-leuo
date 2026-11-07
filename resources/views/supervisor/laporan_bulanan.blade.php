@@ -109,11 +109,11 @@
                         <span class="text-xs text-gray-500 font-mono">{{ $t->customer->account_number ?? '-' }}</span>
                     </td>
                     <td class="py-2.5 px-4">
-                        <span class="px-2 py-0.5 rounded text-xs font-bold {{ in_array($t->transaction_type, ['Setoran', 'Setoran Koreksi']) ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                        <span class="px-2 py-0.5 rounded text-xs font-bold {{ $t->transaction_type === 'Setoran' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                             {{ $t->transaction_type }}
                         </span>
                     </td>
-                    <td class="py-2.5 px-4 text-right font-bold {{ in_array($t->transaction_type, ['Setoran', 'Setoran Koreksi']) ? 'text-green-600' : 'text-red-600' }}">
+                    <td class="py-2.5 px-4 text-right font-bold {{ $t->transaction_type === 'Setoran' ? 'text-green-600' : 'text-red-600' }}">
                         Rp {{ number_format($t->amount, 0, ',', '.') }}
                     </td>
                     <td class="py-2.5 px-4 text-gray-700">{{ $t->user->staff_name ?? '-' }}</td>
@@ -126,6 +126,12 @@
             </tbody>
         </table>
     </div>
+
+    @if($transactions->hasPages())
+        <div class="mt-4 pt-4 border-t border-gray-100">
+            {{ $transactions->links() }}
+        </div>
+    @endif
 </div>
 @endsection
 

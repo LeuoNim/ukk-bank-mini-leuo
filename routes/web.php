@@ -39,6 +39,7 @@ Route::middleware(['auth', 'role:Teller'])->prefix('teller')->group(function () 
     Route::post('/nasabah/{customer}/activate', [CustomerLifecycleController::class, 'activate'])->name('teller.activate');
     Route::post('/nasabah/{customer}/reset', [CustomerLifecycleController::class, 'resetCredentials'])->middleware('throttle:6,1')->name('teller.reset_credentials');
     Route::post('/withdraw', [TellerController::class, 'withdraw'])->name('teller.withdraw');
+    Route::get('/transaksi/{id}/status', [TellerController::class, 'checkPendingStatus'])->name('teller.withdraw.status');
     Route::post('/transaksi/{id}/batal', [TellerController::class, 'cancelWithdrawal'])->name('teller.withdraw.cancel');
     Route::get('/transaksi/{id}/cetak', [TellerController::class, 'cetakStruk'])->name('teller.cetak');
     Route::get('/riwayat', [TellerController::class, 'riwayat'])->name('teller.riwayat');

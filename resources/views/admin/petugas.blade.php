@@ -45,13 +45,8 @@
                         @endif
                     </td>
                     <td class="p-3 whitespace-nowrap">
-                        <a href="{{ route('admin.petugas.edit', $user->id) }}" class="text-amber-600 hover:text-amber-800 text-sm font-bold mr-2">Edit</a>
+                        <a href="{{ route('admin.petugas.edit', $user->id) }}" class="text-amber-600 hover:text-amber-800 text-sm font-bold mr-3">Edit</a>
                         @if($user->id !== auth()->id())
-                            <form action="{{ route('admin.petugas.reset_password', $user->id) }}" method="POST" class="inline mr-2">
-                                @csrf
-                                @method('PATCH')
-                                <button type="submit" onclick="return confirm('Reset kata sandi petugas {{ $user->staff_name }} ke password default (password123)?')" class="text-blue-600 hover:text-blue-800 text-sm font-bold">Reset Sandi</button>
-                            </form>
                             <form action="{{ route('admin.petugas.status', $user->id) }}" method="POST" class="inline">
                                 @csrf
                                 @method('PATCH')

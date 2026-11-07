@@ -110,7 +110,7 @@
 <!-- Tabel Rincian Semua Transaksi -->
 <div class="bg-white border border-gray-200 shadow-sm rounded-lg overflow-hidden">
     <div class="p-4 bg-gray-50 border-b flex justify-between items-center">
-        <h2 class="font-bold text-gray-800 text-sm uppercase">Daftar Transaksi Minggu Ini (Total: {{ $transactions->count() }})</h2>
+        <h2 class="font-bold text-gray-800 text-sm uppercase">Daftar Transaksi Minggu Ini (Total: {{ $transactions->total() }})</h2>
     </div>
     <div class="overflow-x-auto">
         <table class="w-full text-left text-sm">
@@ -135,11 +135,11 @@
                     </td>
                     <td class="py-2.5 px-4">
                         <span class="inline-block px-2 py-0.5 rounded text-xs font-semibold
-                            {{ in_array($t->transaction_type, ['Setoran', 'Setoran Koreksi']) ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
+                            {{ $t->transaction_type === 'Setoran' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800' }}">
                             {{ $t->transaction_type }}
                         </span>
                     </td>
-                    <td class="py-2.5 px-4 text-right font-bold {{ in_array($t->transaction_type, ['Setoran', 'Setoran Koreksi']) ? 'text-green-600' : 'text-red-600' }}">
+                    <td class="py-2.5 px-4 text-right font-bold {{ $t->transaction_type === 'Setoran' ? 'text-green-600' : 'text-red-600' }}">
                         Rp {{ number_format($t->amount, 0, ',', '.') }}
                     </td>
                     <td class="py-2.5 px-4 text-xs text-gray-600">{{ $t->user->staff_name ?? '-' }}</td>
@@ -154,6 +154,12 @@
             </tbody>
         </table>
     </div>
+
+    @if($transactions->hasPages())
+        <div class="mt-4 pt-4 border-t border-gray-100">
+            {{ $transactions->links() }}
+        </div>
+    @endif
 </div>
 <script>
     const periodForm = document.querySelector('select[name="week"]').form;

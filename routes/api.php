@@ -80,9 +80,13 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('customer.active')->group(function () {
         Route::get('/nasabah/saldo', [NasabahController::class, 'saldo']);
         Route::get('/nasabah/mutasi', [NasabahController::class, 'mutasi']);
+        // Otorisasi Penarikan di Aplikasi Mobile (Mendukung kedua pola URL)
         Route::get('/nasabah/pending-withdrawal', [NasabahController::class, 'getPendingWithdrawal']);
+        Route::get('/nasabah/withdrawal/pending', [NasabahController::class, 'getPendingWithdrawal']);
         Route::post('/nasabah/confirm-withdrawal', [NasabahController::class, 'confirmWithdrawal']);
+        Route::post('/nasabah/withdrawal/confirm', [NasabahController::class, 'confirmWithdrawal']);
         Route::post('/nasabah/reject-withdrawal', [NasabahController::class, 'rejectWithdrawal']);
+        Route::post('/nasabah/withdrawal/reject', [NasabahController::class, 'rejectWithdrawal']);
         Route::get('/nasabah/profile', [NasabahAuthController::class, 'profile']);
         Route::post('/nasabah/change-password', [NasabahAuthController::class, 'changePassword']);
         Route::post('/nasabah/change-pin', [NasabahAuthController::class, 'changePin']);
