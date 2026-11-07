@@ -75,7 +75,11 @@
                                     class="text-amber-600 hover:text-amber-800 text-sm font-bold mr-2">Edit</a>
 
                                 @if($c->status === \App\Models\Customer::STATUS_PENDING)
-                                    <span class="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2.5 py-1 rounded font-medium inline-block">Aktivasi di Teller</span>
+                                    <form action="{{ route('admin.nasabah.status', $c->id) }}" method="POST" class="inline">
+                                        @csrf
+                                        @method('PATCH')
+                                        <button type="submit" onclick="return confirm('Aktifkan rekening nasabah ini dengan setoran awal resmi Rp 10.000?')" class="text-emerald-600 hover:text-emerald-800 text-sm font-bold">Aktifkan (Rp10rb)</button>
+                                    </form>
                                 @elseif($c->status === 'Aktif')
                                     <form action="{{ route('admin.nasabah.status', $c->id) }}" method="POST" class="inline mr-2">
                                         @csrf

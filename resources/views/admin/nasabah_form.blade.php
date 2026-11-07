@@ -28,13 +28,21 @@
         @endif
 
         <div class="mb-4">
-            <label class="block text-gray-700 font-bold mb-1.5 text-sm">NIS (Nomor Induk Siswa)</label>
+            <label class="block text-gray-700 font-bold mb-1.5 text-sm">
+                NIS (Nomor Induk Siswa)
+                @if(isset($customer))
+                    <span class="text-xs font-normal text-amber-700 ml-1">(Permanen / Tidak dapat diubah)</span>
+                @endif
+            </label>
             <input type="text" name="student_id" id="student_id"
                 value="{{ old('student_id', $customer->student_id ?? '') }}" required
                 pattern="[0-9]{4,12}"
                 placeholder="Contoh: 2024001 (hanya angka)"
-                class="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm">
-            <span class="text-xs text-gray-500 mt-1 block">Wajib diisi berupa angka NIS resmi siswa (4 - 12 digit).</span>
+                {{ isset($customer) ? 'readonly' : '' }}
+                class="w-full px-4 py-2.5 border rounded-lg focus:outline-none focus:ring-2 focus:ring-amber-500 text-sm {{ isset($customer) ? 'bg-gray-100 text-gray-500 cursor-not-allowed select-none' : '' }}">
+            <span class="text-xs text-gray-500 mt-1 block">
+                {{ isset($customer) ? 'NIS resmi siswa bersifat unik dan tidak dapat diubah demi integritas data rekening.' : 'Wajib diisi berupa angka NIS resmi siswa (4 - 12 digit).' }}
+            </span>
         </div>
 
         <div class="mb-4">

@@ -43,15 +43,9 @@
             </div>
 
             <div>
-                <div class="flex justify-between items-center mb-1.5">
-                    <label class="block text-gray-800 text-xs font-bold uppercase tracking-wide">
-                        Password / PIN
-                    </label>
-                    <a href="{{ route('nasabah.lupa_password') }}"
-                        class="text-xs text-amber-600 hover:text-amber-700 font-semibold transition">
-                        Lupa Password / PIN?
-                    </a>
-                </div>
+                <label class="block text-gray-800 text-xs font-bold mb-1.5 uppercase tracking-wide">
+                    Password / PIN
+                </label>
                 <input type="password" name="password"
                     placeholder="Masukkan sandi akun Anda"
                     class="w-full px-3.5 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:border-gray-900 focus:ring-1 focus:ring-gray-900 text-gray-900 text-sm placeholder-gray-400 transition"

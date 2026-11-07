@@ -227,11 +227,6 @@ class AdminController extends Controller
         $customer = Customer::findOrFail($id);
 
         $request->validate([
-            'student_id' => [
-                'required',
-                'regex:/^[0-9]{4,12}$/',
-                'unique:customers,student_id,'.$id,
-            ],
             'student_name' => [
                 'required',
                 'string',
@@ -249,14 +244,12 @@ class AdminController extends Controller
             'jurusan' => 'nullable|string',
             'pin' => 'prohibited',
         ], [
-            'student_id.regex' => 'NIS harus berupa deret angka (4 - 12 digit).',
             'student_name.min' => 'Nama siswa minimal 3 huruf.',
             'student_name.regex' => 'Nama siswa hanya boleh berisi huruf resmi nama.',
             'class.regex' => 'Format kelas harus valid, contoh: X RPL 1, XI AKL 2, atau XII MPLB 1.',
         ]);
 
         $customer->update([
-            'student_id' => trim($request->student_id),
             'student_name' => trim($request->student_name),
             'class' => strtoupper(trim($request->class)),
         ]);
@@ -266,21 +259,70 @@ class AdminController extends Controller
 
     public function statusNasabah($id)
     {
-        $message = 'Status nasabah berhasil diperbarui.';
+        $credentials = null;
 
-        DB::transaction(function () use ($id, &$message): void {
+        DB::transaction(function () use ($id, &$credentials): void {
             $customer = Customer::whereKey($id)->lockForUpdate()->firstOrFail();
+
             if ($customer->status === Customer::STATUS_PENDING) {
-                // Rekening belum aktivasi wajib melalui loket Teller dengan setoran awal tunai
-                $message = "Nasabah {$customer->student_name} berstatus belum aktivasi. Aktivasi resmi wajib dilakukan di loket Teller dengan setoran awal minimal Rp 10.000.";
+                // Admin mengaktifkan nasabah dengan setoran awal resmi minimal Rp 10.000
+                $initialDeposit = 10000;
+                $newPass = substr(str_shuffle('abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789'), 0, 8);
+                $newPin = (string) random_int(100000, 999999);
+
+                $customer->status = 'Aktif';
+                $customer->balance = $initialDeposit;
+                $customer->password = Hash::make($newPass);
+                $customer->pin = Hash::make($newPin);
+                $customer->save();
+
+                // Catat transaksi setoran awal resmi oleh Administrator
+                $transaction = Transaction::create([
+                    'transaction_code' => 'DEP-'.Str::ulid(),
+                    'customer_id' => $customer->id,
+                    'user_id' => auth()->id(),
+                    'transaction_date' => now(),
+                    'transaction_type' => 'Setoran',
+                    'amount' => $initialDeposit,
+                    'description' => 'Setoran awal aktivasi rekening oleh Administrator',
+                    'status' => 'success',
+                ]);
+
+                // Pembukuan jurnal akuntansi kas bank
+                Accounting_Journal::create([
+                    'transaction_id' => $transaction->id,
+                    'account_code' => '111',
+                    'position' => 'Debet',
+                    'amount' => $initialDeposit,
+                ]);
+
+                Accounting_Journal::create([
+                    'transaction_id' => $transaction->id,
+                    'account_code' => '211',
+                    'position' => 'Kredit',
+                    'amount' => $initialDeposit,
+                ]);
+
+                $credentials = [
+                    'name' => $customer->student_name,
+                    'nis' => $customer->student_id,
+                    'pass' => $newPass,
+                    'pin' => $newPin,
+                    'deposit' => number_format($initialDeposit, 0, ',', '.'),
+                ];
                 return;
             }
+
             $customer->status = $customer->status === 'Aktif' ? 'NonAktif' : 'Aktif';
             $customer->save();
             $customer->tokens()->delete();
         });
 
-        return redirect()->route('admin.nasabah')->with('success', $message);
+        if ($credentials) {
+            return redirect()->route('admin.nasabah')->with('success', "Aktivasi Berhasil! Nasabah {$credentials['name']} (NIS: {$credentials['nis']}) aktif dengan Saldo Awal Rp {$credentials['deposit']}. Password: {$credentials['pass']} | PIN: {$credentials['pin']}");
+        }
+
+        return redirect()->route('admin.nasabah')->with('success', 'Status nasabah berhasil diperbarui.');
     }
 
     public function cetakQrNasabah($id)
